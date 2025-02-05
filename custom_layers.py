@@ -22,6 +22,12 @@ LAYER_0 = Layer(
                     "value": 2,
                 }
             },
+            KeyNames.KEYPAD_1: {
+                "action": {
+                    "type": ActionsEnum.INVOKE_COMMAND,
+                    "value": "code",
+                }
+            },
         }
     )
 )
@@ -108,30 +114,6 @@ LAYER_1 = Layer(
                     "value": (1900, 950),
                 }
             },
-            KeyNames.UP_ARROW: {
-                "action": {
-                    "type": ActionsEnum.INC_MOUSE_POSITION_Y,
-                    "value": -10,
-                }
-            },
-            KeyNames.DOWN_ARROW: {
-                "action": {
-                    "type": ActionsEnum.INC_MOUSE_POSITION_Y,
-                    "value": 10,
-                }
-            },
-            KeyNames.LEFT_ARROW: {
-                "action": {
-                    "type": ActionsEnum.INC_MOUSE_POSITION_X,
-                    "value": -10,
-                }
-            },
-            KeyNames.RIGHT_ARROW: {
-                "action": {
-                    "type": ActionsEnum.INC_MOUSE_POSITION_X,
-                    "value": 10,
-                }
-            },
         }
     )
 )
@@ -183,7 +165,7 @@ LAYER_2 = Layer(
 )
 
 custom_config = Config(
-    [LAYER_0, LAYER_1, LAYER_2],
+    [LAYER_0],
     KeyNames.BACKSLASH,
     is_silent=False,
     suppress_original=False,

@@ -13,6 +13,7 @@ class ActionsEnum(str, Enum):
     SET_MOUSE_POSITION_XY = 6
     INC_MOUSE_POSITION_X = 7
     INC_MOUSE_POSITION_Y = 8
+    INVOKE_COMMAND = 9
 
 
 class KeyActionConfiguration(TypedDict):

@@ -5,6 +5,7 @@ from enums import MODIFIER_KEY_TO_BITMASK, MODIFIERS, KeyNames
 from custom_layers import custom_config
 import time
 from remap_layer import ActionsEnum, Config, KeyActionConfiguration
+import os
 
 
 class KeyLogger:
@@ -154,6 +155,9 @@ class KeyLogger:
             elif action_type == ActionsEnum.INC_MOUSE_POSITION_Y:
                 y_inc = action_value
                 self.inc_mouse_y(y_inc)
+                return True
+            elif action_type == ActionsEnum.INVOKE_COMMAND:
+                os.system(action_value)
                 return True
         return False
 
