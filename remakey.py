@@ -9,20 +9,13 @@ from PyQt6.QtWidgets import (
 )
 from PyQt6.QtCore import QTimer
 import sys
-from key_logger import KeyLogger
-from custom_layers import custom_config
 
 import queue
-import threading
+
+from key_logger_commander import KeyLoggerManager
 
 # Keylogger initialization and definition
-key_logger = KeyLogger(custom_config)
-data_queue = key_logger.data_queue
-change_layer_queue = key_logger.change_layer_queue
-start_event = key_logger.start_event
-stop_event = key_logger.stop_event
-start_keylogger = key_logger.start_key_logger_threaded
-thread = threading.Thread(target=start_keylogger, daemon=True)
+key_logger_commander = KeyLoggerManager()
 
 # Define data fetching timers
 is_live_logs_enabled = True
@@ -62,11 +55,12 @@ scroll_area.setWidget(scroll_widget)
 layout.addWidget(scroll_area)
 layout.addWidget(clear_button)
 
+
 # Ui and timers handlers
 def appendLabel():
     try:
-        while data_queue.not_empty:
-            text = data_queue.get(False)
+        logs = key_logger_commander.get_logs()
+        for text in logs:
             if text.startswith("🔄 Switched to Layer "):
                 current_layer_label.setText(text)
 
@@ -94,14 +88,13 @@ def clear_scroll_layout():
 
 
 def clear_data_queue():
-    while not data_queue.empty():
-        data_queue.get()
+    key_logger_commander.clear_logs()
 
 
 def changedLayerLabelUpdater():
     try:
-        while change_layer_queue.not_empty:
-            text = change_layer_queue.get(False)
+        while key_logger_commander.change_layer_queue.not_empty:
+            text = key_logger_commander.change_layer_queue.get(False)
             current_layer_label.setText(f"🔄 Switched to Layer {text}")
     except queue.Empty:
         pass
@@ -115,22 +108,24 @@ def live_logs_toggle_clicked():
     )
     clear_data_queue()
 
+
 # Connect Ui and timers handlers
 clear_button.clicked.connect(lambda: clear_scroll_layout())
 clock_display_timer.timeout.connect(
     lambda: clock_display_label.setText(time.strftime("%Y-%m-%d %H:%M:%S"))
 )
 log_fetcher_timer.timeout.connect(lambda: appendLabel())
-button.clicked.connect(lambda: start_event.set())
-start.clicked.connect(lambda: stop_event.set())
+button.clicked.connect(lambda: key_logger_commander.start())
+start.clicked.connect(lambda: key_logger_commander.stop())
 live_logs_toggle.clicked.connect(lambda: live_logs_toggle_clicked())
 change_layer_timer.timeout.connect(lambda: changedLayerLabelUpdater())
 
+key_logger_commander.start_thread()
 
-thread.start()
 widget.show()
 clock_display_timer.start(100)
 change_layer_timer.start(100)
 log_fetcher_timer.start(100)
+
 sys.exit(app.exec())
-thread.join()
+key_logger_commander.join_thread()

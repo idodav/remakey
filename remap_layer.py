@@ -1,6 +1,7 @@
 from enum import Enum
 from typing import TypedDict
 from enums import KEY_NAMES, KeyNames
+from uuid import uuid4
 
 
 class ActionsEnum(str, Enum):
@@ -31,8 +32,14 @@ class LayerMapping(TypedDict):
 
 
 class Layer:
-    def __init__(self, mapping: LayerMapping | None):
+    def __init__(self, mapping: LayerMapping | None, name: str = None):
+        self.id = uuid4()
         self.mapping = LayerMapping(mapping={})
+
+        if name != None:
+            self.name = name
+        else:
+            self.name = self.id
 
         if mapping != None:
             self.check_loops(mapping)
@@ -77,7 +84,7 @@ class Config:
         self.is_silent = is_silent
         self.current_layer = None
         self.suppress_original = suppress_original
-        self.layers = []
+        self.layers: list[Layer] = []
         self.change_layer_key = KeyNames.BACKSLASH
 
         if change_layer_key is not None:
@@ -95,6 +102,11 @@ class Config:
     def set_current_layer(self, layer: int):
         if self.current_layer is not None:
             self.current_layer = layer
+
+    def set_current_layer_by_id(self, layer_id: str):
+        for i, layer in enumerate(self.layers):
+            if layer.id == layer_id:
+                self.current_layer = i
 
     def rotate_current_layers(self):
         if self.current_layer is not None:
@@ -128,3 +140,9 @@ class Config:
     def get_key_name(self, keycode: int):
         """Get the readable key name from its keycode."""
         return KEY_NAMES.get(keycode, f"Unknown ({keycode})")
+
+    def get_layer_names(self):
+        return [layer.name for layer in self.layers]
+
+    def get_layer_ids(self):
+        return [layer.id for layer in self.layers]

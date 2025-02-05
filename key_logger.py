@@ -16,6 +16,7 @@ class KeyLogger:
         self.change_layer_queue = queue.Queue()
         self.config: Config = config
         self.is_silent = self.config.is_silent
+        self.counters = {}
 
     def log(self, text):
         if self.is_silent:
@@ -111,6 +112,8 @@ class KeyLogger:
         )
 
     def handle_key_down(self, keycode, event_type):
+        self.counters[keycode] = self.counters.get(keycode, 0) + 1
+
         if keycode == self.config.change_layer_key.value:
             self.rotate_layer()
             return True  # Suppress original key
