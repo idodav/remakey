@@ -1,4 +1,4 @@
-from enum import IntEnum
+from enum import Enum, IntEnum
 import Quartz
 
 
@@ -288,3 +288,8 @@ FUNCTION_KEYS = {
     103: "F11",
     111: "F12",
 }
+
+
+class EventsEnum(str, Enum):
+    KEY_DOWN = Quartz.kCGEventKeyDown
+    KEY_UP = Quartz.kCGEventKeyUp

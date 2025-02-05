@@ -34,7 +34,35 @@ class Layer:
         self.mapping = LayerMapping(mapping={})
 
         if mapping != None:
+            self.check_loops(mapping)
             self.mapping = mapping
+
+    def check_loops(self, mapping: LayerMapping):
+        """Detect loops in key mappings by checking if a key is remapped back to itself or another mapped key."""
+        keys = set(mapping.get("mapping").keys())  # Extract all mapped keys
+        values = set()  # Extract all mapped values
+
+        for key, value in mapping.get("mapping").items():
+            if isinstance(value, dict) and "action" in value:
+                action_type = value["action"].get("type")
+                action_value = value["action"].get("value")
+
+                if action_type == ActionsEnum.CHORD:
+                    # If any key in the chord is also a mapped key, it's a loop
+                    for k in action_value:
+                        values.add(k)
+
+            else:
+                # If the value is a direct key mapping, store it for loop detection
+                values.add(value)
+
+        # Check if any mapped key appears in the values, indicating a remap loop
+        if keys & values:
+            raise ValueError(
+                f"❌ Loop detected! Some keys map to other mapped keys: {keys & values}"
+            )
+
+        print("✅ No loops detected in the key mapping.")
 
 
 class Config:

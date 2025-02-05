@@ -1,5 +1,5 @@
-from enums import KeyNames
-from remap_layer import ActionsEnum, LayerMapping, Layer, Config
+from enums import KeyNames, EventsEnum
+from remap_layer import ActionsEnum, Config, LayerMapping, Layer
 
 LAYER_0 = Layer(
     LayerMapping(
