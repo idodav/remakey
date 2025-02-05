@@ -67,27 +67,30 @@ class KeyLogger:
         )
         flags = Quartz.CGEventGetFlags(event)
         active_modifiers = self_instance.get_active_modifiers(flags)
+        suppress_event = False
 
         if event_type == Quartz.kCGEventFlagsChanged:
             keycode_modifier_flag = MODIFIER_KEY_TO_BITMASK[KeyNames(keycode)]
-            event = (
+            generated_event = (
                 Quartz.kCGEventKeyDown
                 if keycode_modifier_flag & flags
                 else Quartz.kCGEventKeyUp
             )
-            self_instance.register_event(event, active_modifiers, keycode)
-            return None
+
+            if generated_event == Quartz.kCGEventKeyDown:
+                self_instance.handle_key_down(keycode, generated_event)
+            else:
+                self_instance.register_event(generated_event, active_modifiers, keycode)
 
         elif event_type == Quartz.kCGEventKeyDown:
             self_instance.register_event(event_type, active_modifiers, keycode)
-            self_instance.handle_key_down(keycode, event_type)
+            suppress_event = self_instance.handle_key_down(keycode, event_type)
         elif event_type == Quartz.kCGEventKeyUp:
             self_instance.register_event(event_type, active_modifiers, keycode)
-
         if self_instance.config.suppress_original:
             return None  # Suppress original key
 
-        return event
+        return None if suppress_event else event
 
     @staticmethod
     def check_stop_loop(timer, info):
@@ -105,26 +108,44 @@ class KeyLogger:
     def handle_key_down(self, keycode, event_type):
         if keycode == self.config.change_layer_key.value:
             self.rotate_layer()
-            return None  # Suppress original key
+            return True  # Suppress original key
         elif self.config.check_key_in_mapping(keycode):
             action: KeyActionConfiguration = self.config.get_key_action(keycode)
-            action_type = action.type
+            action_type = action.get("type")
+            action_value = action.get("value")
 
             # Default action is remapping
             if action_type is None:
                 new_keycode = self.config.get_remapped_value(keycode)
+                if new_keycode is not None:
+                    self.log(
+                        f"🔁 Remapping {KeyNames(keycode).name} → {KeyNames(new_keycode).name}"
+                    )
+                    self.data_queue.put(
+                        f"🔁 Remapping {KeyNames(keycode).name} → {KeyNames(new_keycode).name}"
+                    )
 
-                self.log(
-                    f"🔁 Remapping {KeyNames(keycode).name} → {KeyNames(new_keycode).name}"
-                )
-                self.data_queue.put(
-                    f"🔁 Remapping {KeyNames(keycode).name} → {KeyNames(new_keycode).name}"
-                )
-
-                self.send_key_event(new_keycode, event_type)
-                return None  # Suppress original key
+                    self.send_key_event(new_keycode, event_type)
+                    return True  # Suppress original key
             elif action_type == ActionsEnum.SET_LAYER:
-                self.set_layer(action.value)
+                self.set_layer(action_value)
+                return True
+            elif action_type == ActionsEnum.SET_MOUSE_POSITION_X:
+                self.set_mouse_x(action_value)
+                return True
+            elif action_type == ActionsEnum.SET_MOUSE_POSITION_XY:
+                (x, y) = action_value
+                self.set_mouse_position(x, y)
+                return True
+            elif action_type == ActionsEnum.INC_MOUSE_POSITION_X:
+                y_inc = action_value
+                self.inc_mouse_x(y_inc)
+                return True
+            elif action_type == ActionsEnum.INC_MOUSE_POSITION_Y:
+                y_inc = action_value
+                self.inc_mouse_y(y_inc)
+                return True
+        return False
 
     def register_event(self, event_type, modifier_text, keycode):
         key_name = self.config.get_key_name(keycode)
@@ -192,6 +213,36 @@ class KeyLogger:
 
         result = Quartz.CFRunLoopRun()  # Keep the loop running
         self.log("🛑 Key Logger Stopped")
+
+    def set_mouse_position(self, x, y):
+        """Moves the mouse cursor to (x, y) and generates an event."""
+        event = Quartz.CGEventCreateMouseEvent(
+            None,  # No special source
+            Quartz.kCGEventMouseMoved,
+            (x, y),
+            Quartz.kCGMouseButtonLeft,  # Button is required but not used for movement
+        )
+        Quartz.CGEventPost(Quartz.kCGHIDEventTap, event)
+
+    def set_mouse_x(self, x):
+        """Sets only the X position while keeping Y unchanged."""
+        (_, current_y) = Quartz.CGEventGetLocation(Quartz.CGEventCreate(None))
+        Quartz.CGWarpMouseCursorPosition((x, current_y))
+
+    def set_mouse_y(self, y):
+        """Sets only the Y position while keeping X unchanged."""
+        (current_x, _) = Quartz.CGEventGetLocation(Quartz.CGEventCreate(None))
+        Quartz.CGWarpMouseCursorPosition((current_x, y))
+
+    def inc_mouse_x(self, x_delta):
+        """Sets only the X position while keeping Y unchanged."""
+        (current_x, current_y) = Quartz.CGEventGetLocation(Quartz.CGEventCreate(None))
+        Quartz.CGWarpMouseCursorPosition((current_x + x_delta, current_y))
+
+    def inc_mouse_y(self, y_inc):
+        """Sets only the Y position while keeping X unchanged."""
+        (current_x, current_y) = Quartz.CGEventGetLocation(Quartz.CGEventCreate(None))
+        Quartz.CGWarpMouseCursorPosition((current_x, current_y + y_inc))
 
 
 if __name__ == "__main__":

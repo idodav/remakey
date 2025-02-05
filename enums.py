@@ -73,6 +73,7 @@ class KeyNames(IntEnum):
     LEFT_SHIFT = 56
     RIGHT_COMMAND = 54
     LEFT_COMMAND = 55
+    CAPS_LOCK = 57
     LEFT_OPTION = 58
     LEFT_CONTROL = 59
     RIGHT_SHIFT = 60
@@ -129,7 +130,6 @@ class KeyNames(IntEnum):
     BRIGHTNESS_UP = 144
     UNKNOWN = 160
     FN = 179
-    CAPS_LOCK = 272
 
 
 KEY_NAMES = {
@@ -201,6 +201,7 @@ KEY_NAMES = {
     67: "Keypad *",
     69: "Keypad +",
     71: "Keypad Clear",
+    75: "Keypad /",
     76: "Keypad Enter",
     78: "Keypad -",
     79: "F18",
@@ -264,7 +265,8 @@ MODIFIER_KEY_TO_BITMASK = {
     KeyNames.RIGHT_COMMAND: Quartz.kCGEventFlagMaskCommand,
     KeyNames.LEFT_OPTION: Quartz.kCGEventFlagMaskAlternate,
     KeyNames.RIGHT_OPTION: Quartz.kCGEventFlagMaskAlternate,
-    KeyNames.FUNCTION: Quartz.kCGEventFlagMaskAlternate,
+    KeyNames.FUNCTION: 0x00800000,
+    KeyNames.CAPS_LOCK: 0x00010000,
 }
 
 # Function Key Mapping (F1 - F12)

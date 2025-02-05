@@ -4,8 +4,15 @@ from enums import KEY_NAMES, KeyNames
 
 
 class ActionsEnum(str, Enum):
+    REMAP = 0
     SET_LAYER = 1
     CHORD = 2
+    SET_MOUSE_POSITION = 3
+    SET_MOUSE_POSITION_X = 4
+    SET_MOUSE_POSITION_Y = 5
+    SET_MOUSE_POSITION_XY = 6
+    INC_MOUSE_POSITION_X = 7
+    INC_MOUSE_POSITION_Y = 8
 
 
 class KeyActionConfiguration(TypedDict):
@@ -39,9 +46,9 @@ class Config:
         is_silent=True,
     ):
         self.is_silent = is_silent
-        self.current_layer = 0
+        self.current_layer = None
         self.suppress_original = suppress_original
-        self.layers = [Layer(None)]
+        self.layers = []
         self.change_layer_key = KeyNames.BACKSLASH
 
         if change_layer_key is not None:
@@ -50,27 +57,44 @@ class Config:
         for layer in layers:
             self.add_layer(layer)
 
+        if len(self.layers) > 0:
+            self.current_layer = 0
+
     def add_layer(self, layer: Layer):
         self.layers.append(layer)
 
     def set_current_layer(self, layer: int):
-        self.current_layer = layer
+        if self.current_layer is not None:
+            self.current_layer = layer
 
     def rotate_current_layers(self):
-        self.current_layer = (self.current_layer + 1) % len(self.layers)
+        if self.current_layer is not None:
+            self.current_layer = (self.current_layer + 1) % len(self.layers)
 
     def check_key_in_mapping(self, keycode: KeyNames):
-        return keycode in self.layers[self.current_layer].mapping.get("mapping")
+        if self.current_layer is not None:
+            return keycode in self.layers[self.current_layer].mapping.get("mapping")
 
     def get_remapped_value(self, keycode: KeyNames):
-        return (
-            self.layers[self.current_layer].mapping.get("mapping")[keycode].remap.value
-        )
+        dict_item = self.layers[self.current_layer].mapping.get("mapping")[keycode]
+        if type(dict_item) == KeyConfiguration:
+            dict_item: KeyConfiguration = dict_item
+            if dict_item.action is not None:
+                if dict_item.action.type == ActionsEnum.REMAP:
+                    return dict_item.action.value
+        elif type(dict_item) == KeyNames:
+            return dict_item
+        elif type(dict_item) == list:
+            return None
+        return None
 
     def get_key_action(self, keycode: KeyNames):
-        return (
-            self.layers[self.current_layer].mapping.get("mapping")[keycode].remap.action
-        )
+        try:
+            dict_item = self.layers[self.current_layer].mapping.get("mapping")[keycode]
+            dict_item: KeyConfiguration = KeyConfiguration(**dict_item)
+            return dict_item.get("action")
+        except Exception as e:
+            return {}
 
     def get_key_name(self, keycode: int):
         """Get the readable key name from its keycode."""
