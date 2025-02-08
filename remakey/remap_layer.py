@@ -1,6 +1,6 @@
 from enum import Enum
 from typing import TypedDict
-from enums import KEY_NAMES, KeyNames
+from remakey.enums import KEY_NAMES, KeyNames
 from uuid import uuid4
 
 
@@ -23,7 +23,6 @@ class KeyActionConfiguration(TypedDict):
 
 
 class KeyConfiguration(TypedDict):
-    remap: KeyNames | list[KeyNames] | None
     action: KeyActionConfiguration | None
 
 
@@ -32,8 +31,8 @@ class LayerMapping(TypedDict):
 
 
 class Layer:
-    def __init__(self, mapping: LayerMapping | None, name: str = None):
-        self.id = uuid4()
+    def __init__(self, mapping: LayerMapping | None, name: str = None, id: str = None):
+        self.id = id if id is not None else uuid4()
         self.mapping = LayerMapping(mapping={})
 
         if name != None:
@@ -146,3 +145,14 @@ class Config:
 
     def get_layer_ids(self):
         return [layer.id for layer in self.layers]
+
+    def get_layer(self, layer_id):
+        for layer in self.layers:
+            if layer.id == layer_id:
+                return layer
+        return None
+
+    def add_remap_to_layer(self, layer_id, key, value):
+        layer = self.get_layer(layer_id)
+        if layer is not None:
+            layer.mapping["mapping"][key] = value

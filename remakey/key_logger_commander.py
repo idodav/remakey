@@ -1,5 +1,6 @@
+from remakey.enums import KeyNames
 from key_logger import KeyLogger
-from custom_layers import custom_config
+from remakey.custom_layers import custom_config
 import threading
 
 
@@ -45,5 +46,16 @@ class KeyLoggerManager:
     def get_layers(self):
         return self.key_logger.config.layers
 
+    def get_layer(self, layer_id: str):
+        return self.key_logger.config.get_layer(layer_id)
+
+    def get_layer_mapping(self, layer_id: str):
+        layer = self.key_logger.config.get_layer(layer_id)
+        mapping = layer.mapping.get("mapping")
+        return mapping
+
     def set_current_layer_by_id(self, layer_id: int):
         self.key_logger.config.set_current_layer_by_id(layer_id)
+
+    def add_remap_to_layer(self, layer_id: int, key: KeyNames, value: KeyNames):
+        self.key_logger.config.add_remap_to_layer(layer_id, key, value)

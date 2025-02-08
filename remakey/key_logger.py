@@ -1,8 +1,8 @@
 import Quartz
 import threading
 import queue
-from enums import MODIFIER_KEY_TO_BITMASK, MODIFIERS, KeyNames
-from custom_layers import custom_config
+from remakey.enums import MODIFIER_KEY_TO_BITMASK, MODIFIERS, KeyNames
+from remakey.custom_layers import custom_config
 import time
 from remap_layer import ActionsEnum, Config, KeyActionConfiguration
 import os
@@ -76,18 +76,20 @@ class KeyLogger:
         suppress_event = False
 
         if event_type == Quartz.kCGEventFlagsChanged:
-            keycode_modifier_flag = MODIFIER_KEY_TO_BITMASK[KeyNames(keycode)]
-            generated_event = (
-                Quartz.kCGEventKeyDown
-                if keycode_modifier_flag & flags
-                else Quartz.kCGEventKeyUp
-            )
+            try:
+                keycode_modifier_flag = MODIFIER_KEY_TO_BITMASK[KeyNames(keycode)]
+                generated_event = (
+                    Quartz.kCGEventKeyDown
+                    if keycode_modifier_flag & flags
+                    else Quartz.kCGEventKeyUp
+                )
 
-            self_instance.register_event(generated_event, active_modifiers, keycode)
+                self_instance.register_event(generated_event, active_modifiers, keycode)
 
-            if generated_event == Quartz.kCGEventKeyDown:
-                self_instance.handle_key_down(keycode, generated_event)
-
+                if generated_event == Quartz.kCGEventKeyDown:
+                    self_instance.handle_key_down(keycode, generated_event)
+            except KeyError:
+                print(f"Key error flags change {keycode}")
         elif event_type == Quartz.kCGEventKeyDown:
             self_instance.register_event(event_type, active_modifiers, keycode)
             suppress_event = self_instance.handle_key_down(keycode, event_type)
