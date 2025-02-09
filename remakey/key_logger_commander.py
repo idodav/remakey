@@ -1,6 +1,6 @@
-from remakey.enums import KeyNames
+from enums import KeyNames
 from key_logger import KeyLogger
-from remakey.custom_layers import custom_config
+from custom_layers import custom_config
 import threading
 
 

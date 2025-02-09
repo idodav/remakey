@@ -3,10 +3,10 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 import uvicorn
 
-from remakey.enums import KeyNames
+from enums import KeyNames
 from key_logger_commander import KeyLoggerManager
 from remap_layer import ActionsEnum
-from remakey.utils import serialize_layer_mapping
+from utils import serialize_layer_mapping
 
 app = FastAPI()
 key_logger_manager = KeyLoggerManager()
