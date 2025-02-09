@@ -256,6 +256,21 @@ MODIFIERS = {
     Quartz.kCGEventFlagMaskAlternate: "Option",
 }
 
+MODIFIER_FLAGS = {
+    "shift": Quartz.kCGEventFlagMaskShift,
+    "control": Quartz.kCGEventFlagMaskControl,
+    "alt": Quartz.kCGEventFlagMaskAlternate,
+    "command": Quartz.kCGEventFlagMaskCommand,
+}
+
+
+class ModifierFlagsEnum(str, Enum):
+    SHIFT = "shift"
+    CONTROL = "control"
+    ALT = "alt"
+    COMMAND = "command"
+
+
 MODIFIER_KEY_TO_BITMASK = {
     KeyNames.LEFT_SHIFT: Quartz.kCGEventFlagMaskShift,
     KeyNames.RIGHT_SHIFT: Quartz.kCGEventFlagMaskShift,
@@ -293,3 +308,6 @@ FUNCTION_KEYS = {
 class EventsEnum(str, Enum):
     KEY_DOWN = Quartz.kCGEventKeyDown
     KEY_UP = Quartz.kCGEventKeyUp
+    KEY_HOLD = "KEY_HOLD"
+    DOUBLE_CLICK = "DOUBLE_CLICK"
+    TRIPLE_CLICK = "TRIPLE_CLICK"

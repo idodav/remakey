@@ -8,14 +8,14 @@
             "name": "key logger",
             "type": "debugpy",
             "request": "launch",
-            "program": "${workspaceFolder}/key_logger.py",
+            "program": "${workspaceFolder}/remakey/key_logger.py",
             "console": "integratedTerminal"
         },
         {
             "name": "server",
             "type": "debugpy",
             "request": "launch",
-            "program": "${workspaceFolder}/server.py",
+            "program": "${workspaceFolder}/remakey/server.py",
             "console": "integratedTerminal"
         }
     ]

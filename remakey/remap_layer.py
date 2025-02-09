@@ -1,6 +1,6 @@
 from enum import Enum
 from typing import TypedDict
-from remakey.enums import KEY_NAMES, KeyNames
+from enums import KEY_NAMES, EventsEnum, KeyNames
 from uuid import uuid4
 
 
@@ -15,11 +15,13 @@ class ActionsEnum(str, Enum):
     INC_MOUSE_POSITION_X = 7
     INC_MOUSE_POSITION_Y = 8
     INVOKE_COMMAND = 9
+    SET_MODIFIER = 10
 
 
 class KeyActionConfiguration(TypedDict):
     type: ActionsEnum | None
     value: int | KeyNames | list[KeyNames] | None
+    event: EventsEnum = EventsEnum.KEY_DOWN
 
 
 class KeyConfiguration(TypedDict):
@@ -27,7 +29,11 @@ class KeyConfiguration(TypedDict):
 
 
 class LayerMapping(TypedDict):
-    mapping: dict[KeyNames, KeyConfiguration, int | KeyNames | list[KeyNames] | None]
+    mapping: dict[
+        KeyNames,
+        KeyConfiguration,
+        int | KeyNames | list[KeyNames] | list[KeyConfiguration] | None,
+    ]
 
 
 class Layer:
@@ -58,7 +64,18 @@ class Layer:
                     # If any key in the chord is also a mapped key, it's a loop
                     for k in action_value:
                         values.add(k)
+            elif isinstance(value, list):
+                for item in value:
+                    action_type = item["action"].get("type")
+                    action_value = item["action"].get("value")
 
+                    if action_type == ActionsEnum.CHORD:
+                        # If any key in the chord is also a mapped key, it's a loop
+                        for k in action_value:
+                            if isinstance(k, dict):
+                                values.add(k.get("keycode"))
+                            elif isinstance(k, KeyNames):
+                                values.add(k)
             else:
                 # If the value is a direct key mapping, store it for loop detection
                 values.add(value)
@@ -128,11 +145,34 @@ class Config:
             return None
         return None
 
-    def get_key_action(self, keycode: KeyNames):
+    def get_key_action(self, keycode: KeyNames, event_type: EventsEnum):
         try:
             dict_item = self.layers[self.current_layer].mapping.get("mapping")[keycode]
-            dict_item: KeyConfiguration = KeyConfiguration(**dict_item)
+
+            if isinstance(dict_item, dict):
+                return dict_item.get("action")
+            if isinstance(dict_item, list):
+                action_by_event = [
+                    action
+                    for action in dict_item
+                    if action.get("action").get("event") == event_type
+                ]
+                return action_by_event[0].get("action") if action_by_event else None
             return dict_item.get("action")
+        except Exception as e:
+            return {}
+
+    def get_key_events(self, keycode: KeyNames):
+        try:
+            dict_item = self.layers[self.current_layer].mapping.get("mapping")[keycode]
+
+            if isinstance(dict_item, dict):
+                return [dict_item.get("action").get("event")]
+            if isinstance(dict_item, list):
+                result = []
+                for item in dict_item:
+                    result.append(item.get("action").get("event"))
+                return result
         except Exception as e:
             return {}
 
