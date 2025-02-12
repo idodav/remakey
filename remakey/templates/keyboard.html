@@ -138,6 +138,11 @@
             align-items: center;
         }
 
+        .key-down {
+            background: #3f4e5e;
+            color: white;
+        }
+
         .action_key {
             background: white;
             text-align: center;
@@ -1078,6 +1083,15 @@
                 });
         }
 
+        function paintKeyDown(keycode) {
+            key = document.querySelector(`.keyboard .key[data-keycode="${keycode}"]`);
+            key.classList.add("key-down");
+        }
+        function paintKeyUp(keycode) {
+            key = document.querySelector(`.keyboard .key[data-keycode="${keycode}"]`);
+            key.classList.remove("key-down");
+        }
+
         registerKeyboardDragEvents();
         setRulerKeys();
         load_layers();
@@ -1087,6 +1101,28 @@
     <script>
         const eventSource = new EventSource("http://localhost:5000/sse");
 
+        eventSource.addEventListener("layerChange", function (event) {
+            console.log("Layer change event", event.data);
+            const layerId = event.data;
+            markSelectedLayer(layerId);
+            fetchLayerDataAndShow(layerId);
+        });
+        eventSource.addEventListener("KEY_DOWN", function (event) {
+            console.log("Layer change event", event.data);
+            debugger;
+            data = JSON.parse(event.data);
+
+            const keycode = data.keycode;
+            paintKeyDown(keycode);
+        });
+        eventSource.addEventListener("KEY_UP", function (event) {
+            console.log("Layer change event", event.data);
+            debugger;
+            data = JSON.parse(event.data);
+
+            const keycode = data.keycode;
+            paintKeyUp(keycode);
+        });
         eventSource.addEventListener("layerChange", function (event) {
             console.log("Layer change event", event.data);
             const layerId = event.data;

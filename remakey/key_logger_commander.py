@@ -3,6 +3,7 @@ from enums import KeyNames
 from key_logger import KeyLogger
 from custom_layers import custom_config
 import threading
+import json
 
 
 class KeyLoggerManager:
@@ -46,10 +47,13 @@ class KeyLoggerManager:
                 yield text
             if not self.data_queue.empty():
                 log = self.data_queue.get(block=False)
-                text = f"id:123\nevent: log\ndata: {log}\n\n"
+                event_type = log.get("type")
+                keycode = log.get("keycode")
+                stringified_data = json.dumps(log)
+                text = f"id:{keycode}_{event_type}\nevent: {event_type}\ndata: {stringified_data}\n\n"
                 yield text
 
-            await asyncio.sleep(0.1)
+            await asyncio.sleep(0.01)
 
     def clear_logs(self):
         while not self.data_queue.empty():

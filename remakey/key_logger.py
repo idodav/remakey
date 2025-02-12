@@ -63,9 +63,7 @@ class KeyLogger:
     def rotate_layer(self):
         self.config.rotate_current_layers()
         current_layer_id = self.config.layers[self.config.current_layer].id
-        current_layer_name = self.config.layers[self.config.current_layer].name
         self.log(f"🔄 Switched to Layer {self.config.current_layer}")
-        self.data_queue.put(f"🔄 Switched to Layer {self.config.current_layer}")
         self.change_layer_queue.put(current_layer_id)
 
     def set_layer(self, layer_index):
@@ -73,7 +71,6 @@ class KeyLogger:
         current_layer_id = self.config.layers[self.config.current_layer].id
         current_layer_name = self.config.layers[self.config.current_layer].name
         self.log(f"🔄 Switched to Layer {current_layer_name}")
-        self.data_queue.put(f"🔄 Switched to Layer {current_layer_name}")
         self.change_layer_queue.put(current_layer_id)
 
     def set_layer_by_id(self, layer_id):
@@ -81,7 +78,6 @@ class KeyLogger:
         current_layer_id = self.config.layers[self.config.current_layer].id
         current_layer_name = self.config.layers[self.config.current_layer].name
         self.log(f"🔄 Switched to Layer {current_layer_name}")
-        self.data_queue.put(f"🔄 Switched to Layer {current_layer_name}")
         self.change_layer_queue.put(current_layer_id)
 
     @staticmethod
@@ -137,18 +133,13 @@ class KeyLogger:
     def handle_flags_changed(self, flags, keycode):
         active_modifiers = self.get_active_modifiers(flags)
         self.log(f"Active modifiers: {active_modifiers}")
-        self.data_queue.put(
-            f"Active modifiers: {active_modifiers} (Keycode: {keycode})".strip()
-        )
 
     def handle_key_down(self, keycode, event_type):
         return self.handle_event(event_type, keycode)
 
     def handle_event(self, event_type, keycode):
         self.counters[keycode] = self.counters.get(keycode, 0) + 1
-        if event_type != int(
-            EventsEnum.KEY_DOWN.value
-        ):
+        if event_type != int(EventsEnum.KEY_DOWN.value):
             return False
         if keycode == self.config.change_layer_key.value and event_type == int(
             EventsEnum.KEY_DOWN.value
@@ -165,9 +156,6 @@ class KeyLogger:
                 new_keycode = self.config.get_remapped_value(keycode)
                 if new_keycode is not None:
                     self.log(
-                        f"🔁 Remapping {KeyNames(keycode).name} → {KeyNames(new_keycode).name}"
-                    )
-                    self.data_queue.put(
                         f"🔁 Remapping {KeyNames(keycode).name} → {KeyNames(new_keycode).name}"
                     )
 
@@ -268,19 +256,43 @@ class KeyLogger:
 
         if event_type == Quartz.kCGEventKeyDown:
             text = f"🟢 Key Pressed: {modifier_text} {key_name} (Keycode: {keycode})".strip()
-            self.data_queue.put(text)
+            data = {
+                "type": "KEY_DOWN",
+                "key": key_name,
+                "modifiers": modifier_text,
+                "keycode": keycode,
+            }
+            self.data_queue.put(data)
             self.log(text)
         elif event_type == Quartz.kCGEventKeyUp:
             text = f"🔴 Key Released: {modifier_text} {key_name} (Keycode: {keycode})".strip()
-            self.data_queue.put(text)
+            data = {
+                "type": "KEY_UP",
+                "key": key_name,
+                "modifiers": modifier_text,
+                "keycode": keycode,
+            }
+            self.data_queue.put(data)
             self.log(text)
         elif event_type == "KEY_HOLD":
             text = f"🕒 Key Hold: {modifier_text} (Keycode: {keycode})".strip()
-            self.data_queue.put(text)
+            data = {
+                "type": "KEY_HOLD",
+                "key": key_name,
+                "modifiers": modifier_text,
+                "keycode": keycode,
+            }
+            self.data_queue.put(data)
             self.log(text)
         elif event_type == EventsEnum.KEY_HOLD_RELEASE:
             text = f"🕒 Key Hold Released: {modifier_text} (Keycode: {keycode})".strip()
-            self.data_queue.put(text)
+            data = {
+                "type": "KEY_HOLD_RELEASE",
+                "key": key_name,
+                "modifiers": modifier_text,
+                "keycode": keycode,
+            }
+            self.data_queue.put(data)
             self.log(text)
 
     def start_key_logger_threaded(self):
