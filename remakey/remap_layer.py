@@ -37,9 +37,16 @@ class LayerMapping(TypedDict):
 
 
 class Layer:
-    def __init__(self, mapping: LayerMapping | None, name: str = None, id: str = None):
+    def __init__(
+        self,
+        mapping: LayerMapping | None,
+        name: str = None,
+        id: str = None,
+        suppress_unmapped=False,
+    ):
         self.id = id if id is not None else uuid4()
         self.mapping = LayerMapping(mapping={})
+        self.suppress_unmapped = suppress_unmapped
 
         if name != None:
             self.name = name
@@ -94,12 +101,10 @@ class Config:
         self,
         layers: list[Layer],
         change_layer_key: KeyNames,
-        suppress_unmapped=False,
         is_silent=True,
     ):
         self.is_silent = is_silent
         self.current_layer = None
-        self.suppress_unmapped = suppress_unmapped
         self.layers: list[Layer] = []
         self.change_layer_key = KeyNames.BACKSLASH
 
@@ -114,6 +119,9 @@ class Config:
 
     def add_layer(self, layer: Layer):
         self.layers.append(layer)
+
+    def get_current_layer(self) -> Layer:
+        return self.layers[self.current_layer]
 
     def set_current_layer(self, layer: int):
         if self.current_layer is not None:

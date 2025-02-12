@@ -48,7 +48,7 @@ class KeyLogger:
     def send_key_event(self, keycode, event_type, modifier_flags=None):
         """Send a new keyboard event with the specified keycode."""
         event = Quartz.CGEventCreateKeyboardEvent(
-            None, keycode, event_type == int(EventsEnum.KEY_DOWN)
+            None, keycode, event_type == Quartz.kCGEventKeyDown
         )
 
         if modifier_flags:
@@ -79,6 +79,9 @@ class KeyLogger:
         current_layer_name = self.config.layers[self.config.current_layer].name
         self.log(f"🔄 Switched to Layer {current_layer_name}")
         self.change_layer_queue.put(current_layer_id)
+
+    def get_current_layer(self):
+        return self.config.get_current_layer()
 
     @staticmethod
     def keyboard_callback(proxy, event_type, event, refcon):
@@ -119,7 +122,8 @@ class KeyLogger:
         elif event_type == Quartz.kCGEventKeyUp:
             self_instance.register_event(event_type, active_modifiers, keycode)
             self_instance.handle_key_up(keycode)
-        if self_instance.config.suppress_unmapped:
+
+        if self_instance.config.get_current_layer().suppress_unmapped:
             return None  # Suppress original key
 
         return None if suppress_event else event
@@ -135,12 +139,13 @@ class KeyLogger:
         self.log(f"Active modifiers: {active_modifiers}")
 
     def handle_key_down(self, keycode, event_type):
-        return self.handle_event(event_type, keycode)
+        return self.track_special_events(keycode) or self.handle_event(
+            event_type, keycode
+        )
 
     def handle_event(self, event_type, keycode):
         self.counters[keycode] = self.counters.get(keycode, 0) + 1
-        if event_type != int(EventsEnum.KEY_DOWN.value):
-            return False
+
         if keycode == self.config.change_layer_key.value and event_type == int(
             EventsEnum.KEY_DOWN.value
         ):
@@ -158,15 +163,27 @@ class KeyLogger:
                     self.log(
                         f"🔁 Remapping {KeyNames(keycode).name} → {KeyNames(new_keycode).name}"
                     )
+                    new_event_type = (
+                        Quartz.kCGEventKeyDown
+                        if event_type == Quartz.kCGEventKeyDown
+                        else Quartz.kCGEventKeyUp
+                    )
 
-                    self.send_key_event(new_keycode, event_type)
+                    self.send_key_event(new_keycode, new_event_type)
                     return True  # Suppress original key
             else:
                 action_type = action.get("type")
                 action_value = action.get("value")
+                action_event = action.get("event")
+
+                if action_event is not None and str(event_type) != str(
+                    action_event.value
+                ):
+                    return False
 
                 if action_type == ActionsEnum.CHORD:
                     for key_tuple in action_value:
+                        # TODO fix this logic
                         if isinstance(key_tuple, int):
                             self.send_key_event(key_tuple, key_tuple)
                         elif isinstance(key_tuple, dict):
@@ -174,13 +191,15 @@ class KeyLogger:
                             chord_event = key_tuple.get("event")
                             custom_modifiers = key_tuple.get("modifiers")
 
-                            flag = None
+                            modifier_flags = None
 
                             if custom_modifiers:
-                                flag = 0
+                                modifier_flags = 0
                                 for modifier in custom_modifiers:
-                                    flag |= MODIFIER_FLAGS[modifier]
-                            self.send_key_event(chord_keycode, chord_event, flag)
+                                    modifier_flags |= MODIFIER_FLAGS[modifier]
+                            self.send_key_event(
+                                chord_keycode, chord_event, modifier_flags
+                            )
                     return True
                 elif action_type == ActionsEnum.SET_MODIFIER:
                     self.active_modifiers = action_value
@@ -204,11 +223,27 @@ class KeyLogger:
                     return True
                 elif action_type == ActionsEnum.INVOKE_COMMAND:
                     subprocess.Popen(action_value, shell=True)
+                elif action_type == ActionsEnum.REMAP:
+                    new_keycode = action_value
+                    modifiers = action.get("modifiers")
+                    modifier_flags = None
+
+                    if modifiers:
+                        modifier_flags = 0
+                        for modifier in modifiers:
+                            modifier_flags |= MODIFIER_FLAGS[modifier]
+                    self.send_key_event(
+                        new_keycode, Quartz.kCGEventKeyDown, modifier_flags
+                    )
+                    self.send_key_event(
+                        new_keycode, Quartz.kCGEventKeyUp, modifier_flags
+                    )
+                    return True  # Suppress original key
+
                 return True
         return False
 
     def track_special_events(self, keycode):
-        return  ## disabling for now
         now = time.time()
 
         # Track key press start time
@@ -223,9 +258,9 @@ class KeyLogger:
                     "timestamp": self.key_press_times[keycode].get("timestamp"),
                     "triggered": True,
                 }
-                self.register_event(EventsEnum.KEY_HOLD, [], keycode)
-                self.handle_event(EventsEnum.KEY_HOLD, keycode)
-        self.counters[keycode] = self.counters.get(keycode, 0) + 1
+                self.register_event(EventsEnum.KEY_HOLD.value, [], keycode)
+                self.handle_event(EventsEnum.KEY_HOLD.value, keycode)
+            return True
         return False
 
     def handle_key_up(self, keycode):
