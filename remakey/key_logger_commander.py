@@ -40,17 +40,24 @@ class KeyLoggerManager:
 
     async def get_change_layer_logs_generator(self):
         while True:
-            if self.change_layer_queue.empty():
-                await asyncio.sleep(0.1)
-                continue
-            change_layer = self.change_layer_queue.get(block=False)
-            text = f"id:123\nevent: layerChange\ndata: {change_layer}\n\n"
-            yield text
+            if not self.change_layer_queue.empty():
+                change_layer = self.change_layer_queue.get(block=False)
+                text = f"id:layer_changed_{change_layer}\nevent: layerChange\ndata: {change_layer}\n\n"
+                yield text
+            if not self.data_queue.empty():
+                log = self.data_queue.get(block=False)
+                text = f"id:123\nevent: log\ndata: {log}\n\n"
+                yield text
+
             await asyncio.sleep(0.1)
 
     def clear_logs(self):
         while not self.data_queue.empty():
             self.data_queue.get()
+
+    def clear_change_layer_logs(self):
+        while not self.change_layer_queue.empty():
+            self.change_layer_queue.get()
 
     def join_thread(self):
         self.thread.join()
@@ -71,6 +78,18 @@ class KeyLoggerManager:
         layer = self.key_logger.config.get_layer(layer_id)
         mapping = layer.mapping.get("mapping")
         return mapping
+
+    def get_current_layer_mapping(self):
+        layer_id = self.key_logger.config.layers[
+            self.key_logger.config.current_layer
+        ].id
+        return self.get_layer_mapping(layer_id)
+
+    def get_current_layer(self):
+        layer_id = self.key_logger.config.layers[
+            self.key_logger.config.current_layer
+        ].id
+        return self.get_layer(layer_id)
 
     def set_current_layer_by_id(self, layer_id: int):
         self.key_logger.set_layer_by_id(layer_id)

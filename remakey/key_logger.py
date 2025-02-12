@@ -147,7 +147,9 @@ class KeyLogger:
 
     def handle_event(self, event_type, keycode):
         self.counters[keycode] = self.counters.get(keycode, 0) + 1
-        if event_type != int(EventsEnum.KEY_DOWN.value):
+        if event_type != int(
+            EventsEnum.KEY_DOWN.value
+        ):
             return False
         if keycode == self.config.change_layer_key.value and event_type == int(
             EventsEnum.KEY_DOWN.value

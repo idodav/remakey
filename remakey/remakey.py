@@ -94,10 +94,26 @@ async def get_logs():
 
 @app.get("/sse")
 async def get_sse(request: Request):
+    key_logger_manager.clear_change_layer_logs()
+    key_logger_manager.clear_logs()
+
     return StreamingResponse(
         key_logger_manager.get_change_layer_logs_generator(),
         media_type="text/event-stream",
     )
+
+
+@app.get("/heatmap")
+async def get_heatmap(request: Request):
+    data = key_logger_manager.key_logger.counters
+
+    # Normalize to a range between 1 and 100
+    min_val, max_val = min(data.values()), max(data.values())
+    normalized_data = {
+        key: int(1 + (value - min_val) / (max_val - min_val) * (100 - 1))
+        for key, value in data.items()
+    }
+    return normalized_data
 
 
 @app.get("/layers")
@@ -116,6 +132,19 @@ async def get_layer_mapping(layer_id: str):
     mapping = serialize_layer_mapping(key_logger_manager.get_layer_mapping(layer_id))
 
     return mapping
+
+
+@app.get("/current-mapping")
+async def get_current_layer_mapping(layer_id: str):
+    mapping = serialize_layer_mapping(key_logger_manager.get_current_layer_mapping())
+
+    return mapping
+
+
+@app.get("/current-layer-id")
+async def get_current_layer_mapping():
+    current_layer_id = key_logger_manager.get_current_layer().id
+    return current_layer_id
 
 
 @app.post("/layers/{layer_id}/mapping")
@@ -140,7 +169,7 @@ async def get_editor(request: Request):
 
 def main():
     print("Remakey server is running...")
-    uvicorn.run("server:app", host="0.0.0.0", port=5000)
+    uvicorn.run("remakey:app", host="0.0.0.0", port=5000)
 
 
 if __name__ == "__main__":

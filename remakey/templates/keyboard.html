@@ -974,6 +974,7 @@
                     });
                 });
         }
+
         function registerKeyboardDragEvents() {
             document.querySelectorAll('.keys_ruler .key').forEach(key => {
                 key.addEventListener('dragstart', onDragStart);
@@ -1068,9 +1069,18 @@
             });
         }
 
+        function loadCurrentLayer() {
+            fetch(`http://localhost:5000/current-layer-id`)
+                .then(response => response.json())
+                .then(layerId => {
+                    fetchLayerDataAndShow(layerId);
+                });
+        }
+
         registerKeyboardDragEvents();
         setRulerKeys();
         load_layers();
+        loadCurrentLayer();
     </script>
 
     <script>

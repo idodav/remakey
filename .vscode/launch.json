@@ -16,7 +16,7 @@
             "type": "debugpy",
             "request": "launch",
             "cwd": "${workspaceFolder}/remakey",
-            "program": "server.py",
+            "program": "remakey.py",
             "console": "integratedTerminal"
         },
         {
