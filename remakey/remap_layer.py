@@ -122,7 +122,7 @@ class Config:
     def set_current_layer_by_id(self, layer_id: str):
         for i, layer in enumerate(self.layers):
             if layer.id == layer_id:
-                self.current_layer = i
+                self.set_current_layer(i)
 
     def rotate_current_layers(self):
         if self.current_layer is not None:

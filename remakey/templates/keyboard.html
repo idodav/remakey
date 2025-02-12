@@ -418,11 +418,7 @@
         </div>
     </div>
 
-    <div class="card config_card">
-        Config
-        <pre id="conf_box">
-        </pre>
-    </div>
+
 
     <div class="card">
         <div class="tab-container">
@@ -627,6 +623,12 @@
 
     </div>
 
+    <div class="card config_card">
+        Config
+        <pre id="conf_box">
+        </pre>
+    </div>
+
     <script>
         const keys = [
             { keycode: 53, label: "Esc", width: 55 },
@@ -654,9 +656,9 @@
             { keycode: 19, label: "2" },
             { keycode: 20, label: "3" },
             { keycode: 21, label: "4" },
-            { keycode: 22, label: "5" },
-            { keycode: 23, label: "6" },
-            { keycode: 24, label: "7" },
+            { keycode: 22, label: "6" },
+            { keycode: 23, label: "5" },
+            { keycode: 26, label: "7" },
             { keycode: 28, label: "8" },
             { keycode: 25, label: "9" },
             { keycode: 29, label: "0" },
@@ -931,26 +933,7 @@
 
                         layerElement.onclick = function () {
                             selectedLayer = layer.id;
-                            fetch(`http://localhost:5000/layers/${layer.id}/mapping`)
-                                .then(response => response.json())
-                                .then(layerData => {
-                                    clearRemaps();
-                                    layers = layerData;
-
-                                    for (const [key, value] of Object.entries(layerData)) {
-                                        action = value?.action;
-                                        actionType = value?.action?.type;
-
-                                        if (action != null) {
-                                            setKeyRemap(key, null, action);
-                                        } else {
-                                            setKeyRemap(key, value, null);
-                                        }
-                                    }
-                                    setKeyRemap()
-                                    generateRemapConfig();
-                                    markSelectedLayer(layer.id);
-                                });
+                            fetchLayerDataAndShow(layer.id);
                         };
                         layersContainer.appendChild(layerElement);
                     });
@@ -968,6 +951,29 @@
             document.querySelector(`.tab-container .tab[onclick="openTab('${tabName}')"]`).classList.add('active');
         }
 
+        function fetchLayerDataAndShow(layerId) {
+            fetch(`http://localhost:5000/layers/${layerId}/mapping`)
+                .then(response => response.json())
+                .then(layerData => {
+                    clearRemaps();
+                    layers = layerData;
+
+                    for (const [key, value] of Object.entries(layerData)) {
+                        action = value?.action;
+                        actionType = value?.action?.type;
+
+                        if (action != null) {
+                            setKeyRemap(key, null, action);
+                        } else {
+                            setKeyRemap(key, value, null);
+                        }
+                    }
+                    generateRemapConfig();
+                    sendChangeLayer(layer.id).then(() => {
+                        markSelectedLayer(layer.id);
+                    });
+                });
+        }
         function registerKeyboardDragEvents() {
             document.querySelectorAll('.keys_ruler .key').forEach(key => {
                 key.addEventListener('dragstart', onDragStart);
@@ -1029,12 +1035,9 @@
         }
 
         function markSelectedLayer(layerId) {
-            sendChangeLayer(layerId).then(() => {
-                clearSelectedLayer();
-                selectedLayer = layerId;
-                document.querySelector(`.layer[data-layer-id="${layerId}"]`).classList.add('selected_layer');
-            });
-
+            clearSelectedLayer();
+            selectedLayer = layerId;
+            document.querySelector(`.layer[data-layer-id="${layerId}"]`).classList.add('selected_layer');
         }
 
         function startKeylogger() {
@@ -1068,6 +1071,22 @@
         registerKeyboardDragEvents();
         setRulerKeys();
         load_layers();
+    </script>
+
+    <script>
+        const eventSource = new EventSource("http://localhost:5000/sse");
+
+        eventSource.addEventListener("layerChange", function (event) {
+            console.log("Layer change event", event.data);
+            const layerId = event.data;
+            markSelectedLayer(layerId);
+            fetchLayerDataAndShow(layerId);
+        });
+
+        eventSource.onerror = function (event) {
+            console.error("SSE connection error", event);
+            eventSource.close(); // Close connection on error
+        };
     </script>
 </body>
 

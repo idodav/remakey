@@ -1,6 +1,7 @@
 from contextlib import asynccontextmanager
 from typing import List, Optional, Union
 from fastapi import FastAPI, Request, Depends
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 import uvicorn
 
@@ -89,6 +90,14 @@ async def clear_logs():
 async def get_logs():
     logs = key_logger_manager.get_logs()
     return {"logs": logs}
+
+
+@app.get("/sse")
+async def get_sse(request: Request):
+    return StreamingResponse(
+        key_logger_manager.get_change_layer_logs_generator(),
+        media_type="text/event-stream",
+    )
 
 
 @app.get("/layers")

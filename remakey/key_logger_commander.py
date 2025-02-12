@@ -1,3 +1,4 @@
+import asyncio
 from enums import KeyNames
 from key_logger import KeyLogger
 from custom_layers import custom_config
@@ -30,6 +31,23 @@ class KeyLoggerManager:
             logs.append(text)
         return logs
 
+    def get_change_layer_logs(self):
+        logs = []
+        while self.change_layer_queue.not_empty:
+            text = self.change_layer_queue.get(False)
+            logs.append(text)
+        return logs
+
+    async def get_change_layer_logs_generator(self):
+        while True:
+            if self.change_layer_queue.empty():
+                await asyncio.sleep(0.1)
+                continue
+            change_layer = self.change_layer_queue.get(block=False)
+            text = f"id:123\nevent: layerChange\ndata: {change_layer}\n\n"
+            yield text
+            await asyncio.sleep(0.1)
+
     def clear_logs(self):
         while not self.data_queue.empty():
             self.data_queue.get()
@@ -55,7 +73,7 @@ class KeyLoggerManager:
         return mapping
 
     def set_current_layer_by_id(self, layer_id: int):
-        self.key_logger.config.set_current_layer_by_id(layer_id)
+        self.key_logger.set_layer_by_id(layer_id)
 
     def add_remap_to_layer(self, layer_id: int, key: KeyNames, value: KeyNames):
         self.key_logger.config.add_remap_to_layer(layer_id, key, value)

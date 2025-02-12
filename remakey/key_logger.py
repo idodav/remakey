@@ -49,7 +49,7 @@ class KeyLogger:
     def send_key_event(self, keycode, event_type, modifier_flags=None):
         """Send a new keyboard event with the specified keycode."""
         event = Quartz.CGEventCreateKeyboardEvent(
-            None, keycode, event_type == EventsEnum.KEY_DOWN
+            None, keycode, event_type == int(EventsEnum.KEY_DOWN)
         )
 
         if modifier_flags:
@@ -63,15 +63,27 @@ class KeyLogger:
 
     def rotate_layer(self):
         self.config.rotate_current_layers()
+        current_layer_id = self.config.layers[self.config.current_layer].id
+        current_layer_name = self.config.layers[self.config.current_layer].name
         self.log(f"🔄 Switched to Layer {self.config.current_layer}")
         self.data_queue.put(f"🔄 Switched to Layer {self.config.current_layer}")
-        self.change_layer_queue.put(self.config.current_layer)
+        self.change_layer_queue.put(current_layer_id)
 
     def set_layer(self, layer_index):
         self.config.set_current_layer(layer_index)
-        self.log(f"🔄 Switched to Layer {self.config.current_layer}")
-        self.data_queue.put(f"🔄 Switched to Layer {self.config.current_layer}")
-        self.change_layer_queue.put(self.config.current_layer)
+        current_layer_id = self.config.layers[self.config.current_layer].id
+        current_layer_name = self.config.layers[self.config.current_layer].name
+        self.log(f"🔄 Switched to Layer {current_layer_name}")
+        self.data_queue.put(f"🔄 Switched to Layer {current_layer_name}")
+        self.change_layer_queue.put(current_layer_id)
+
+    def set_layer_by_id(self, layer_id):
+        self.config.set_current_layer_by_id(layer_id)
+        current_layer_id = self.config.layers[self.config.current_layer].id
+        current_layer_name = self.config.layers[self.config.current_layer].name
+        self.log(f"🔄 Switched to Layer {current_layer_name}")
+        self.data_queue.put(f"🔄 Switched to Layer {current_layer_name}")
+        self.change_layer_queue.put(current_layer_id)
 
     @staticmethod
     def keyboard_callback(proxy, event_type, event, refcon):
@@ -106,7 +118,7 @@ class KeyLogger:
 
             except KeyError:
                 print(f"Key error flags change {keycode}")
-        elif event_type == Quartz.kCGEventKeyDown:
+        if event_type == Quartz.kCGEventKeyDown:
             self_instance.register_event(event_type, active_modifiers, keycode)
             suppress_event = self_instance.handle_key_down(keycode, event_type)
         elif event_type == Quartz.kCGEventKeyUp:
@@ -136,83 +148,77 @@ class KeyLogger:
     def handle_event(self, event_type, keycode):
         self.counters[keycode] = self.counters.get(keycode, 0) + 1
 
-        if (
-            event_type == EventsEnum.KEY_HOLD
-            or event_type == EventsEnum.KEY_HOLD_RELEASE
+        if keycode == self.config.change_layer_key.value and event_type == int(
+            EventsEnum.KEY_DOWN.value
         ):
-            self.track_special_events(keycode)
-            return True
-        else:
-            if keycode == self.config.change_layer_key.value and event_type == int(
-                EventsEnum.KEY_DOWN.value
-            ):
-                self.rotate_layer()
-                return True  # Suppress original key
-            elif self.config.check_key_in_mapping(keycode):
-                action: KeyActionConfiguration = self.config.get_key_action(
-                    keycode, event_type
-                )
+            self.rotate_layer()
+            return True  # Suppress original key
+        elif self.config.check_key_in_mapping(keycode):
+            action: KeyActionConfiguration = self.config.get_key_action(
+                keycode, event_type
+            )
 
-                # Default action is remapping
-                if action is None:
-                    new_keycode = self.config.get_remapped_value(keycode)
-                    if new_keycode is not None:
-                        self.log(
-                            f"🔁 Remapping {KeyNames(keycode).name} → {KeyNames(new_keycode).name}"
-                        )
-                        self.data_queue.put(
-                            f"🔁 Remapping {KeyNames(keycode).name} → {KeyNames(new_keycode).name}"
-                        )
+            # Default action is remapping
+            if action is None:
+                new_keycode = self.config.get_remapped_value(keycode)
+                if new_keycode is not None:
+                    self.log(
+                        f"🔁 Remapping {KeyNames(keycode).name} → {KeyNames(new_keycode).name}"
+                    )
+                    self.data_queue.put(
+                        f"🔁 Remapping {KeyNames(keycode).name} → {KeyNames(new_keycode).name}"
+                    )
 
-                        self.send_key_event(new_keycode, event_type)
-                        return True  # Suppress original key
-                else:
-                    action_type = action.get("type")
-                    action_value = action.get("value")
+                    self.send_key_event(new_keycode, event_type)
+                    return True  # Suppress original key
+            else:
+                action_type = action.get("type")
+                action_value = action.get("value")
 
-                    if action_type == ActionsEnum.CHORD:
-                        for key_tuple in action_value:
-                            if isinstance(key_tuple, int):
-                                self.send_key_event(key_tuple, key_tuple)
-                            elif isinstance(key_tuple, dict):
-                                chord_keycode = key_tuple.get("key")
-                                chord_event = key_tuple.get("event")
-                                custom_modifiers = key_tuple.get("modifiers")
+                if action_type == ActionsEnum.CHORD:
+                    for key_tuple in action_value:
+                        if isinstance(key_tuple, int):
+                            self.send_key_event(key_tuple, key_tuple)
+                        elif isinstance(key_tuple, dict):
+                            chord_keycode = key_tuple.get("key")
+                            chord_event = key_tuple.get("event")
+                            custom_modifiers = key_tuple.get("modifiers")
 
-                                flag = None
+                            flag = None
 
-                                if custom_modifiers:
-                                    flag = 0
-                                    for modifier in custom_modifiers:
-                                        flag |= MODIFIER_FLAGS[modifier]
-                                self.send_key_event(chord_keycode, chord_event, flag)
-                        return True
-                    elif action_type == ActionsEnum.SET_MODIFIER:
-                        self.active_modifiers = action_value
-                    elif action_type == ActionsEnum.SET_LAYER:
-                        self.set_layer(action_value)
-                        return True
-                    elif action_type == ActionsEnum.SET_MOUSE_POSITION_X:
-                        self.set_mouse_x(action_value)
-                        return True
-                    elif action_type == ActionsEnum.SET_MOUSE_POSITION_XY:
-                        (x, y) = action_value
-                        self.set_mouse_position(x, y)
-                        return True
-                    elif action_type == ActionsEnum.INC_MOUSE_POSITION_X:
-                        y_inc = action_value
-                        self.inc_mouse_x(y_inc)
-                        return True
-                    elif action_type == ActionsEnum.INC_MOUSE_POSITION_Y:
-                        y_inc = action_value
-                        self.inc_mouse_y(y_inc)
-                        return True
-                    elif action_type == ActionsEnum.INVOKE_COMMAND:
-                        os.system(action_value)
+                            if custom_modifiers:
+                                flag = 0
+                                for modifier in custom_modifiers:
+                                    flag |= MODIFIER_FLAGS[modifier]
+                            self.send_key_event(chord_keycode, chord_event, flag)
                     return True
+                elif action_type == ActionsEnum.SET_MODIFIER:
+                    self.active_modifiers = action_value
+                elif action_type == ActionsEnum.SET_LAYER:
+                    self.set_layer(action_value)
+                    return True
+                elif action_type == ActionsEnum.SET_MOUSE_POSITION_X:
+                    self.set_mouse_x(action_value)
+                    return True
+                elif action_type == ActionsEnum.SET_MOUSE_POSITION_XY:
+                    (x, y) = action_value
+                    self.set_mouse_position(x, y)
+                    return True
+                elif action_type == ActionsEnum.INC_MOUSE_POSITION_X:
+                    y_inc = action_value
+                    self.inc_mouse_x(y_inc)
+                    return True
+                elif action_type == ActionsEnum.INC_MOUSE_POSITION_Y:
+                    y_inc = action_value
+                    self.inc_mouse_y(y_inc)
+                    return True
+                elif action_type == ActionsEnum.INVOKE_COMMAND:
+                    os.system(action_value)
+                return True
         return False
 
     def track_special_events(self, keycode):
+        return  ## disabling for now
         now = time.time()
 
         # Track key press start time

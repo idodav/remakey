@@ -18,6 +18,21 @@
             "cwd": "${workspaceFolder}/remakey",
             "program": "server.py",
             "console": "integratedTerminal"
-        }
+        },
+        {
+            "name": "Debug Main Process",
+            "type": "node",
+            "request": "launch",
+            "runtimeExecutable": "electron",
+            "args": [
+                "./electron_main.js"
+            ],
+            "cwd": "${workspaceFolder}/remakey/templates",
+            "outputCapture": "std",
+            "console": "integratedTerminal",
+            "windows": {
+                "runtimeExecutable": "${workspaceFolder}/node_modules/.bin/electron"
+            },
+        },
     ]
 }
