@@ -1,4 +1,3 @@
-from enum import Enum
 from custom_layers import custom_config
 import Quartz
 import threading
@@ -13,6 +12,7 @@ from enums import (
 import time
 from remap_layer import ActionsEnum, Config, KeyActionConfiguration
 import os
+import subprocess
 
 
 class KeyLogger:
@@ -147,7 +147,8 @@ class KeyLogger:
 
     def handle_event(self, event_type, keycode):
         self.counters[keycode] = self.counters.get(keycode, 0) + 1
-
+        if event_type != int(EventsEnum.KEY_DOWN.value):
+            return False
         if keycode == self.config.change_layer_key.value and event_type == int(
             EventsEnum.KEY_DOWN.value
         ):
@@ -213,7 +214,7 @@ class KeyLogger:
                     self.inc_mouse_y(y_inc)
                     return True
                 elif action_type == ActionsEnum.INVOKE_COMMAND:
-                    os.system(action_value)
+                    subprocess.Popen(action_value, shell=True)
                 return True
         return False
 

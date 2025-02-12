@@ -7,11 +7,11 @@ app.whenReady().then(() => {
 
     win = new BrowserWindow({
         width: 910,
-        height: 310,
+        height: 280,
         x: ((width - 910) / 2), // Position it to the bottom-right corner
-        y: height - 310,
+        y: height - 280,
         alwaysOnTop: true, // Keep the widget floating
-        frame: true, // Remove window frame
+        frame: false, // Remove window frame
         transparent: false, // Make it transparent
         resizable: true,
         movable: true,
