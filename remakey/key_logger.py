@@ -11,7 +11,6 @@ from enums import (
 )
 import time
 from remap_layer import ActionsEnum, Config, KeyActionConfiguration
-import os
 import subprocess
 
 

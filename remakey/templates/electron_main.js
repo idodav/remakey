@@ -12,7 +12,7 @@ app.whenReady().then(() => {
         y: height - 280,
         alwaysOnTop: true, // Keep the widget floating
         frame: false, // Remove window frame
-        transparent: false, // Make it transparent
+        transparent: true, // Make it transparent
         resizable: true,
         movable: true,
         webPreferences: {
