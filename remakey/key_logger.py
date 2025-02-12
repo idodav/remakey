@@ -245,21 +245,26 @@ class KeyLogger:
 
     def track_special_events(self, keycode):
         now = time.time()
+        key_events = self.config.get_key_events(keycode)
 
-        # Track key press start time
-        if keycode not in self.key_press_times:
-            self.key_press_times[keycode] = {"timestamp": now, "triggered": False}
-        else:
-            press_duration = now - self.key_press_times[keycode].get("timestamp")
-            triggered = self.key_press_times[keycode].get("triggered")
+        if EventsEnum.KEY_HOLD in key_events:
+            # Track key press start time
+            if keycode not in self.key_press_times:
+                self.key_press_times[keycode] = {"timestamp": now, "triggered": False}
+            elif not self.key_press_times[keycode].get("released"):
+                press_duration = now - self.key_press_times[keycode].get("timestamp")
+                triggered = self.key_press_times[keycode].get("triggered")
 
-            if press_duration >= self.hold_threshold and not triggered:
-                self.key_press_times[keycode] = {
-                    "timestamp": self.key_press_times[keycode].get("timestamp"),
-                    "triggered": True,
-                }
-                self.register_event(EventsEnum.KEY_HOLD.value, [], keycode)
-                self.handle_event(EventsEnum.KEY_HOLD.value, keycode)
+                if press_duration >= self.hold_threshold and not triggered:
+                    self.key_press_times[keycode] = {
+                        "timestamp": self.key_press_times[keycode].get("timestamp"),
+                        "triggered": True,
+                    }
+                    self.register_event(EventsEnum.KEY_HOLD.value, [], keycode)
+                    self.handle_event(EventsEnum.KEY_HOLD.value, keycode)
+            else:
+                return False
+
             return True
         return False
 
@@ -270,11 +275,21 @@ class KeyLogger:
             press_duration = now - self.key_press_times[keycode].get("timestamp")
             triggered = self.key_press_times[keycode].get("triggered")
 
-            del self.key_press_times[keycode]  # Remove after processing
-
             if press_duration >= self.hold_threshold and triggered:
+                del self.key_press_times[keycode]  # Remove after processing
+
                 self.register_event(EventsEnum.KEY_HOLD_RELEASE, [], keycode)
                 return self.handle_event(EventsEnum.KEY_HOLD_RELEASE, keycode)
+            elif self.key_press_times[keycode].get("released"):
+                del self.key_press_times[keycode]  # Remove after processing
+            else:
+                self.key_press_times[keycode] = {
+                    "released": True,
+                    "timestamp": self.key_press_times[keycode].get("timestamp"),
+                    "triggered": None,
+                }
+                self.send_key_event(keycode, Quartz.kCGEventKeyDown)
+                self.send_key_event(keycode, Quartz.kCGEventKeyUp)
 
         return self.handle_event(EventsEnum.KEY_UP, keycode)
 
