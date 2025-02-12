@@ -94,12 +94,12 @@ class Config:
         self,
         layers: list[Layer],
         change_layer_key: KeyNames,
-        suppress_original=False,
+        suppress_unmapped=False,
         is_silent=True,
     ):
         self.is_silent = is_silent
         self.current_layer = None
-        self.suppress_original = suppress_original
+        self.suppress_unmapped = suppress_unmapped
         self.layers: list[Layer] = []
         self.change_layer_key = KeyNames.BACKSLASH
 
@@ -160,7 +160,7 @@ class Config:
                 return action_by_event[0].get("action") if action_by_event else None
             return dict_item.get("action")
         except Exception as e:
-            return {}
+            return None
 
     def get_key_events(self, keycode: KeyNames):
         try:
@@ -173,6 +173,7 @@ class Config:
                 for item in dict_item:
                     result.append(item.get("action").get("event"))
                 return result
+            return []
         except Exception as e:
             return {}
 

@@ -309,5 +309,6 @@ class EventsEnum(str, Enum):
     KEY_DOWN = Quartz.kCGEventKeyDown
     KEY_UP = Quartz.kCGEventKeyUp
     KEY_HOLD = "KEY_HOLD"
+    KEY_HOLD_RELEASE = "KEY_HOLD_RELEASE"
     DOUBLE_CLICK = "DOUBLE_CLICK"
     TRIPLE_CLICK = "TRIPLE_CLICK"

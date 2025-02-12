@@ -6,15 +6,15 @@ def serialize_layer_mapping(mapping):
 
     def convert_value(value):
         if isinstance(value, dict):  # Recursive conversion for nested dictionaries
-            return {k: convert_value(v) for k, v in value.items()}
+            translated_action = value["action"]["type"].name
+            parsed_value = value["action"]["value"]
+            res = {"action": {"type": translated_action, "value": parsed_value}}
+
+            return res
         elif isinstance(value, list):  # Convert lists
-            return [convert_value(v) for v in value]
-        elif isinstance(value, Enum):  # Replace Enums with their names
-            return value.name
+            return convert_value(value[0])
         return value  # Keep other values unchanged
 
-    serialized_mapping = {
-        key.name: convert_value(value) for key, value in mapping.items()
-    }
+    serialized_mapping = {key: convert_value(value) for key, value in mapping.items()}
 
     return serialized_mapping

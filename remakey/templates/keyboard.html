@@ -1,0 +1,1074 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Magic Keyboard Replica</title>
+    <style>
+        ::-webkit-scrollbar {
+            display: none;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        .card {
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            width: fit-content;
+            background: gray;
+            padding: 10px;
+        }
+
+        .buttons_container {
+            display: flex;
+            flex-direction: row;
+            justify-content: center;
+            width: fit-content;
+            margin-top: 10px;
+            gap: 10px;
+        }
+
+        input {
+            padding: 10px 16px;
+            font-size: 16px;
+            font-weight: bold;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+        }
+
+        .config_card {
+            max-height: 400px;
+            overflow: auto;
+            color: white;
+        }
+
+        button {
+            padding: 10px 16px;
+            font-size: 16px;
+            font-weight: bold;
+            background: #000000;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+        }
+
+        button:hover {
+            background: #3f84ce;
+            transform: scale(1.01);
+        }
+
+        button:active {
+            background: #3f84ce;
+            transform: scale(1);
+        }
+
+        body {
+            background-color: #000000;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 5px;
+            row-gap: 20px;
+            align-items: center;
+        }
+
+        /* Media Query for Small Screens */
+        @media (max-width:1000px) {
+            body {
+                grid-template-columns: 1fr;
+                /* Switch to single column */
+            }
+        }
+
+        .keyboard {
+            /* background-image: url('magic_keyboard_cropped.png'); */
+            /* background-repeat: no-repeat; */
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            width: 873px;
+            /* height: 242px; */
+            padding: 9px;
+            border-radius: 15px;
+        }
+
+        .row {
+            display: flex;
+            flex-direction: row;
+            column-gap: 3px;
+            margin-right: 7px;
+            border-radius: 15px;
+        }
+
+        .row1 {
+            display: flex;
+            flex-direction: row;
+            column-gap: 3px;
+            margin-right: 6px;
+        }
+
+        .row2 {
+            display: flex;
+            flex-direction: row;
+            column-gap: 3px;
+        }
+
+
+        .key {
+            background: white;
+            text-align: center;
+            border-radius: 5px;
+            box-shadow: 0 2px 2px rgba(0, 0, 0, 0.2);
+            font-size: 14px;
+            cursor: grab;
+            user-select: none;
+            width: 36px;
+            height: 32px;
+            min-width: 36px;
+            min-height: 32px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .action_key {
+            background: white;
+            text-align: center;
+            border-radius: 5px;
+            box-shadow: 0 2px 2px rgba(0, 0, 0, 0.2);
+            font-size: 40px;
+            cursor: grab;
+            user-select: none;
+            width: fit-content;
+            /* height: 32px; */
+            padding: 8px 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .key:active {
+            cursor: grabbing;
+        }
+
+        .key.wide {
+            grid-column: span 2;
+        }
+
+        .key.extra-wide {
+            grid-column: span 3;
+        }
+
+        .key.space {
+            grid-column: span 6;
+        }
+
+        .numpad {
+            grid-column: span 4;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 5px;
+        }
+
+        .keypad_enter {
+            height: 32px;
+        }
+
+        .keys_ruler {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            width: 873px;
+            height: 242px;
+            min-width: 873px;
+            min-height: 242px;
+        }
+
+        .actions_ruler {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 5px;
+        }
+
+        .action_value {
+            margin-top: 10px;
+        }
+
+        .key {
+            transition: all 0.2s ease-in-out;
+        }
+
+        .key:hover {
+            background: #f0f0f0;
+            transform: scale(1.1);
+            font-weight: bold;
+        }
+
+        .key:active {
+            background: #ddd;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+        }
+
+        .layer_selector {
+            color: white;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .selected_layer {
+            background: #3f84ce;
+        }
+    </style>
+    <style>
+        .tab-container {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 10px;
+        }
+
+        .tab {
+
+            cursor: pointer;
+            border-bottom: none;
+        }
+
+        .tab.active {
+            font-weight: bold;
+        }
+
+        .tab-content {
+            display: none;
+            border-radius: 5px;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="card">
+        <div class="keyboard">
+            <div class="row">
+                <div class="row">
+                    <div class="key" data-keycode="53" style="width:55px;" draggable="true"></div>
+                    <div class="key" data-keycode="122" draggable="true"></div>
+                    <div class="key" data-keycode="120" draggable="true"></div>
+                    <div class="key" data-keycode="99" draggable="true"></div>
+                    <div class="key" data-keycode="118" draggable="true"></div>
+                    <div class="key" data-keycode="96" draggable="true"></div>
+                    <div class="key" data-keycode="97" draggable="true"></div>
+                    <div class="key" data-keycode="98" draggable="true"></div>
+                    <div class="key" data-keycode="100" draggable="true"></div>
+                    <div class="key" data-keycode="101" draggable="true"></div>
+                    <div class="key" data-keycode="109" draggable="true"></div>
+                    <div class="key" data-keycode="103" draggable="true"></div>
+                    <div class="key" data-keycode="111" draggable="true"></div>
+                    <div class="key" data-keycode="" draggable="true"></div>
+                </div>
+                <div class="row1">
+                    <div class="key" data-keycode="105" draggable="true"></div>
+                    <div class="key" data-keycode="107" draggable="true"></div>
+                    <div class="key" data-keycode="113" draggable="true"></div>
+                </div>
+                <div class="row2">
+                    <div class="key" data-keycode="106" draggable="true"></div>
+                    <div class="key" data-keycode="64" draggable="true"></div>
+                    <div class="key" data-keycode="79" draggable="true"></div>
+                    <div class="key" data-keycode="80" draggable="true"></div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="row">
+                    <div class="key" data-keycode="39" draggable="true"></div>
+                    <div class="key" data-keycode="18" draggable="true"></div>
+                    <div class="key" data-keycode="19" draggable="true"></div>
+                    <div class="key" data-keycode="20" draggable="true"></div>
+                    <div class="key" data-keycode="21" draggable="true"></div>
+                    <div class="key" data-keycode="22" draggable="true"></div>
+                    <div class="key" data-keycode="23" draggable="true"></div>
+                    <div class="key" data-keycode="24" draggable="true"></div>
+                    <div class="key" data-keycode="28" draggable="true"></div>
+                    <div class="key" data-keycode="25" draggable="true"></div>
+                    <div class="key" data-keycode="29" draggable="true"></div>
+                    <div class="key" data-keycode="27" draggable="true"></div>
+                    <div class="key" data-keycode="24" draggable="true"></div>
+                    <div class="key" data-keycode="51" style="width: 55px;" draggable="true"></div>
+                </div>
+                <div class="row1">
+                    <div class="key" data-keycode="179" draggable="true"></div>
+                    <div class="key" data-keycode="115" draggable="true"></div>
+                    <div class="key" data-keycode="116" draggable="true"></div>
+                </div>
+                <div class="row2">
+                    <div class="key" data-keycode="71" draggable="true"></div>
+                    <div class="key" data-keycode="81" draggable="true"></div>
+                    <div class="key" data-keycode="75" draggable="true"></div>
+                    <div class="key" data-keycode="67" draggable="true"></div>
+
+                </div>
+            </div>
+            <div class="row">
+                <div class="row">
+                    <div class="key" data-keycode="48" style="width:55px;" draggable="true"></div>
+                    <div class="key" data-keycode="12" draggable="true"></div>
+                    <div class="key" data-keycode="13" draggable="true"></div>
+                    <div class="key" data-keycode="14" draggable="true"></div>
+                    <div class="key" data-keycode="15" draggable="true"></div>
+                    <div class="key" data-keycode="17" draggable="true"></div>
+                    <div class="key" data-keycode="16" draggable="true"></div>
+                    <div class="key" data-keycode="32" draggable="true"></div>
+                    <div class="key" data-keycode="34" draggable="true"></div>
+                    <div class="key" data-keycode="31" draggable="true"></div>
+                    <div class="key" data-keycode="35" draggable="true"></div>
+                    <div class="key" data-keycode="33" draggable="true"></div>
+                    <div class="key" data-keycode="30" draggable="true"></div>
+                    <div class="key" data-keycode="42" draggable="true"></div>
+                </div>
+                <div class="row1">
+
+                    <div class="key" data-keycode="117" draggable="true"></div>
+                    <div class="key" data-keycode="119" draggable="true"></div>
+                    <div class="key" data-keycode="121" draggable="true"></div>
+                </div>
+                <div class="row2">
+                    <div class="key" data-keycode="89" draggable="true"></div>
+                    <div class="key" data-keycode="91" draggable="true"></div>
+                    <div class="key" data-keycode="92" draggable="true"></div>
+                    <div class="key" data-keycode="78" draggable="true"></div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="row">
+                    <div class="key" data-keycode="57" style="width:65px;" draggable="true"></div>
+                    <div class="key" data-keycode="0" draggable="true"></div>
+                    <div class="key" data-keycode="1" draggable="true"></div>
+                    <div class="key" data-keycode="2" draggable="true"></div>
+                    <div class="key" data-keycode="3" draggable="true"></div>
+                    <div class="key" data-keycode="5" draggable="true"></div>
+                    <div class="key" data-keycode="4" draggable="true"></div>
+                    <div class="key" data-keycode="38" draggable="true"></div>
+                    <div class="key" data-keycode="40" draggable="true"></div>
+                    <div class="key" data-keycode="37" draggable="true"></div>
+                    <div class="key" data-keycode="41" draggable="true"></div>
+                    <div class="key" data-keycode="39" draggable="true"></div>
+                    <div class="key" data-keycode="36" style="width:65px;" draggable="true"></div>
+                </div>
+                <div class="row2" style="margin-left: 123px">
+                    <div class="key" data-keycode="86" draggable="true"></div>
+                    <div class="key" data-keycode="87" draggable="true"></div>
+                    <div class="key" data-keycode="88" draggable="true"></div>
+                    <div class="key" data-keycode="69" draggable="true"></div>
+                </div>
+            </div>
+            <div class="row keypad_enter">
+                <div class="row">
+                    <div class="key" data-keycode="56" style="width:85px;" draggable="true"></div>
+                    <div class="key" data-keycode="6" draggable="true"></div>
+                    <div class="key" data-keycode="7" draggable="true"></div>
+                    <div class="key" data-keycode="8" draggable="true"></div>
+                    <div class="key" data-keycode="9" draggable="true"></div>
+                    <div class="key" data-keycode="11" draggable="true"></div>
+                    <div class="key" data-keycode="45" draggable="true"></div>
+                    <div class="key" data-keycode="46" draggable="true"></div>
+                    <div class="key" data-keycode="43" draggable="true"></div>
+                    <div class="key" data-keycode="47" draggable="true"></div>
+                    <div class="key" data-keycode="44" draggable="true"></div>
+                    <div class="key" data-keycode="60" style="width:85px;" draggable="true"></div>
+                </div>
+                <div class="row1">
+                    <div class="key" data-keycode="126" style="margin-left:38px;margin-right:40px;" draggable="true">
+                    </div>
+                </div>
+                <div class="row2">
+                    <div class="key" data-keycode="83" draggable="true"></div>
+                    <div class="key" data-keycode="84" draggable="true"></div>
+                    <div class="key" data-keycode="85" draggable="true"></div>
+                    <div class="key" data-keycode="76" style="height:70px;" draggable="true"></div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="row">
+                    <div class="key" style="width:55px;" data-keycode="59" draggable="true"></div>
+                    <div class="key" style="width:45px;" data-keycode="58" draggable="true"></div>
+                    <div class="key" style="width:55px;" data-keycode="55" draggable="true"></div>
+                    <div class="key" style="width:234px;" data-keycode="49" draggable="true"></div>
+                    <div class="key" style="width:55px;" data-keycode="54" draggable="true"></div>
+                    <div class="key" style="width:45px;" data-keycode="61" draggable="true"></div>
+                    <div class="key" style="width:55px;" data-keycode="62" draggable="true"></div>
+                </div>
+                <div class="row1">
+                    <div class="key" data-keycode="123" draggable="true"></div>
+                    <div class="key" data-keycode="125" draggable="true"></div>
+                    <div class="key" data-keycode="124" draggable="true"></div>
+                </div>
+                <div class="row2">
+                    <div class="key" data-keycode="82" style="width:76px;" draggable="true"></div>
+                    <div class="key" data-keycode="65" draggable="true"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card config_card">
+        Config
+        <pre id="conf_box">
+        </pre>
+    </div>
+
+    <div class="card">
+        <div class="tab-container">
+            <button class="tab active" onclick="openTab('keys_ruler')">Keys</button>
+            <button class="tab" onclick="openTab('actions_ruler')">Actions</button>
+            <button class="tab" onclick="openTab('layers')">Layers</button>
+        </div>
+        <div class="tab-content" id="actions_ruler">
+            <div class="actions_ruler">
+                <div class="action_key" draggable="true" data-action="REMAP" data-action-icon="🔄">🔄</div>
+                <div class="action_key" draggable="true" data-action="SET_LAYER" data-action-icon="📚">📚</div>
+                <div class="action_key" draggable="true" data-action="CHORD" data-action-icon="🎹">🎹</div>
+                <div class="action_key" draggable="true" data-action="INVOKE_COMMAND" data-action-icon="🖥">🖥</div>
+                <div class="action_key" draggable="true" data-action="SET_MODIFIER" data-action-icon="⌨️">⌨️</div>
+            </div>
+            <div class="action_value">
+                Action value:
+                <input type="text" id="action_value" />
+            </div>
+        </div>
+        <div class="tab-content " id="keys_ruler">
+            <div class="keys_ruler">
+                <div class="row">
+                    <div class="row">
+                        <div class="key" data-keycode="53" style="width:55px;" draggable="true"></div>
+                        <div class="key" data-keycode="122" draggable="true"></div>
+                        <div class="key" data-keycode="120" draggable="true"></div>
+                        <div class="key" data-keycode="99" draggable="true"></div>
+                        <div class="key" data-keycode="118" draggable="true"></div>
+                        <div class="key" data-keycode="96" draggable="true"></div>
+                        <div class="key" data-keycode="97" draggable="true"></div>
+                        <div class="key" data-keycode="98" draggable="true"></div>
+                        <div class="key" data-keycode="100" draggable="true"></div>
+                        <div class="key" data-keycode="101" draggable="true"></div>
+                        <div class="key" data-keycode="109" draggable="true"></div>
+                        <div class="key" data-keycode="103" draggable="true"></div>
+                        <div class="key" data-keycode="111" draggable="true"></div>
+                        <div class="key" data-keycode="" draggable="true"></div>
+                    </div>
+                    <div class="row1">
+                        <div class="key" data-keycode="105" draggable="true"></div>
+                        <div class="key" data-keycode="107" draggable="true"></div>
+                        <div class="key" data-keycode="113" draggable="true"></div>
+                    </div>
+                    <div class="row2">
+                        <div class="key" data-keycode="106" draggable="true"></div>
+                        <div class="key" data-keycode="64" draggable="true"></div>
+                        <div class="key" data-keycode="79" draggable="true"></div>
+                        <div class="key" data-keycode="80" draggable="true"></div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="row">
+                        <div class="key" data-keycode="39" draggable="true"></div>
+                        <div class="key" data-keycode="18" draggable="true"></div>
+                        <div class="key" data-keycode="19" draggable="true"></div>
+                        <div class="key" data-keycode="20" draggable="true"></div>
+                        <div class="key" data-keycode="21" draggable="true"></div>
+                        <div class="key" data-keycode="22" draggable="true"></div>
+                        <div class="key" data-keycode="23" draggable="true"></div>
+                        <div class="key" data-keycode="24" draggable="true"></div>
+                        <div class="key" data-keycode="28" draggable="true"></div>
+                        <div class="key" data-keycode="25" draggable="true"></div>
+                        <div class="key" data-keycode="29" draggable="true"></div>
+                        <div class="key" data-keycode="27" draggable="true"></div>
+                        <div class="key" data-keycode="24" draggable="true"></div>
+                        <div class="key" data-keycode="51" style="width: 55px;" draggable="true"></div>
+                    </div>
+                    <div class="row1">
+                        <div class="key" data-keycode="179" draggable="true"></div>
+                        <div class="key" data-keycode="115" draggable="true"></div>
+                        <div class="key" data-keycode="116" draggable="true"></div>
+                    </div>
+                    <div class="row2">
+                        <div class="key" data-keycode="71" draggable="true"></div>
+                        <div class="key" data-keycode="81" draggable="true"></div>
+                        <div class="key" data-keycode="75" draggable="true"></div>
+                        <div class="key" data-keycode="67" draggable="true"></div>
+
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="row">
+                        <div class="key" data-keycode="48" style="width:55px;" draggable="true"></div>
+                        <div class="key" data-keycode="12" draggable="true"></div>
+                        <div class="key" data-keycode="13" draggable="true"></div>
+                        <div class="key" data-keycode="14" draggable="true"></div>
+                        <div class="key" data-keycode="15" draggable="true"></div>
+                        <div class="key" data-keycode="17" draggable="true"></div>
+                        <div class="key" data-keycode="16" draggable="true"></div>
+                        <div class="key" data-keycode="32" draggable="true"></div>
+                        <div class="key" data-keycode="34" draggable="true"></div>
+                        <div class="key" data-keycode="31" draggable="true"></div>
+                        <div class="key" data-keycode="35" draggable="true"></div>
+                        <div class="key" data-keycode="33" draggable="true"></div>
+                        <div class="key" data-keycode="30" draggable="true"></div>
+                        <div class="key" data-keycode="42" draggable="true"></div>
+                    </div>
+                    <div class="row1">
+
+                        <div class="key" data-keycode="117" draggable="true"></div>
+                        <div class="key" data-keycode="119" draggable="true"></div>
+                        <div class="key" data-keycode="121" draggable="true"></div>
+                    </div>
+                    <div class="row2">
+                        <div class="key" data-keycode="89" draggable="true"></div>
+                        <div class="key" data-keycode="91" draggable="true"></div>
+                        <div class="key" data-keycode="92" draggable="true"></div>
+                        <div class="key" data-keycode="78" draggable="true"></div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="row">
+                        <div class="key" data-keycode="57" style="width:65px;" draggable="true"></div>
+                        <div class="key" data-keycode="0" draggable="true"></div>
+                        <div class="key" data-keycode="1" draggable="true"></div>
+                        <div class="key" data-keycode="2" draggable="true"></div>
+                        <div class="key" data-keycode="3" draggable="true"></div>
+                        <div class="key" data-keycode="5" draggable="true"></div>
+                        <div class="key" data-keycode="4" draggable="true"></div>
+                        <div class="key" data-keycode="38" draggable="true"></div>
+                        <div class="key" data-keycode="40" draggable="true"></div>
+                        <div class="key" data-keycode="37" draggable="true"></div>
+                        <div class="key" data-keycode="41" draggable="true"></div>
+                        <div class="key" data-keycode="39" draggable="true"></div>
+                        <div class="key" data-keycode="36" style="width:65px;" draggable="true"></div>
+                    </div>
+                    <div class="row1" style="width:0px;">
+                    </div>
+                    <div class="row2" style="margin-left: 115px">
+                        <div class="key" data-keycode="86" draggable="true"></div>
+                        <div class="key" data-keycode="87" draggable="true"></div>
+                        <div class="key" data-keycode="88" draggable="true"></div>
+                        <div class="key" data-keycode="69" draggable="true"></div>
+                    </div>
+                </div>
+                <div class="row keypad_enter">
+                    <div class="row">
+                        <div class="key" data-keycode="56" style="width:85px;" draggable="true"></div>
+                        <div class="key" data-keycode="6" draggable="true"></div>
+                        <div class="key" data-keycode="7" draggable="true"></div>
+                        <div class="key" data-keycode="8" draggable="true"></div>
+                        <div class="key" data-keycode="9" draggable="true"></div>
+                        <div class="key" data-keycode="11" draggable="true"></div>
+                        <div class="key" data-keycode="45" draggable="true"></div>
+                        <div class="key" data-keycode="46" draggable="true"></div>
+                        <div class="key" data-keycode="43" draggable="true"></div>
+                        <div class="key" data-keycode="47" draggable="true"></div>
+                        <div class="key" data-keycode="44" draggable="true"></div>
+                        <div class="key" data-keycode="60" style="width:85px;" draggable="true"></div>
+                    </div>
+                    <div class="row1">
+                        <div class="key" data-keycode="" draggable="true"></div>
+                        <div class="key" data-keycode="126" draggable="true"></div>
+                        <div class="key" data-keycode="" draggable="true"></div>
+                    </div>
+                    <div class="row2">
+                        <div class="key" data-keycode="83" draggable="true"></div>
+                        <div class="key" data-keycode="84" draggable="true"></div>
+                        <div class="key" data-keycode="85" draggable="true"></div>
+                        <div class="key" data-keycode="76" style="height:70px;" draggable="true"></div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="row">
+                        <div class="key" style="width:55px;" data-keycode="59" draggable="true"></div>
+                        <div class="key" style="width:45px;" data-keycode="58" draggable="true"></div>
+                        <div class="key" style="width:55px;" data-keycode="55" draggable="true"></div>
+                        <div class="key" style="width:234px;" data-keycode="49" draggable="true"></div>
+                        <div class="key" style="width:55px;" data-keycode="54" draggable="true"></div>
+                        <div class="key" style="width:45px;" data-keycode="61" draggable="true"></div>
+                        <div class="key" style="width:55px;" data-keycode="62" draggable="true"></div>
+                    </div>
+                    <div class="row1">
+                        <div class="key" data-keycode="123" draggable="true"></div>
+                        <div class="key" data-keycode="125" draggable="true"></div>
+                        <div class="key" data-keycode="124" draggable="true"></div>
+                    </div>
+                    <div class="row2">
+                        <div class="key" data-keycode="82" style="width:76px;" draggable="true"></div>
+                        <div class="key" data-keycode="65" draggable="true"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="tab-content active" id="layers">
+            <div class="layer_selector"></div>
+        </div>
+    </div>
+
+    <div class="buttons_container card">
+        <button onclick="generateRemapConfig()">Generate conf</button>
+        <button onclick="clearRemaps()">
+            Clear Remaps
+        </button>
+        <button onclick="startKeylogger()">
+            Start
+        </button>
+        <button onclick="stopKeylogger()">
+            Stop
+        </button>
+
+    </div>
+
+    <script>
+        const keys = [
+            { keycode: 53, label: "Esc", width: 55 },
+            { keycode: 122, label: "F1" },
+            { keycode: 120, label: "F2" },
+            { keycode: 99, label: "F3" },
+            { keycode: 118, label: "F4" },
+            { keycode: 96, label: "F5" },
+            { keycode: 97, label: "F6" },
+            { keycode: 98, label: "F7" },
+            { keycode: 100, label: "F8" },
+            { keycode: 101, label: "F9" },
+            { keycode: 109, label: "F10" },
+            { keycode: 103, label: "F11" },
+            { keycode: 111, label: "F12" },
+            { keycode: 105, label: "F13" },
+            { keycode: 107, label: "F14" },
+            { keycode: 113, label: "F15" },
+            { keycode: 106, label: "F16" },
+            { keycode: 64, label: "F17" },
+            { keycode: 79, label: "F18" },
+            { keycode: 80, label: "F19" },
+            { keycode: 39, label: "`" },
+            { keycode: 18, label: "1" },
+            { keycode: 19, label: "2" },
+            { keycode: 20, label: "3" },
+            { keycode: 21, label: "4" },
+            { keycode: 22, label: "5" },
+            { keycode: 23, label: "6" },
+            { keycode: 24, label: "7" },
+            { keycode: 28, label: "8" },
+            { keycode: 25, label: "9" },
+            { keycode: 29, label: "0" },
+            { keycode: 27, label: "-" },
+            { keycode: 24, label: "=" },
+            { keycode: 51, label: "delete", width: 55 },
+            { keycode: 179, label: "fn" },
+            { keycode: 115, label: "home" },
+            { keycode: 116, label: "pg up" },
+            { keycode: 71, label: "clear" },
+            { keycode: 81, label: "=" },
+            { keycode: 75, label: "/" },
+            { keycode: 67, label: "*" },
+            { keycode: 48, label: "tab", width: 55 },
+            { keycode: 12, label: "Q" },
+            { keycode: 13, label: "W" },
+            { keycode: 14, label: "E" },
+            { keycode: 15, label: "R" },
+            { keycode: 17, label: "T" },
+            { keycode: 16, label: "Y" },
+            { keycode: 32, label: "U" },
+            { keycode: 34, label: "I" },
+            { keycode: 31, label: "O" },
+            { keycode: 35, label: "P" },
+            { keycode: 33, label: "[" },
+            { keycode: 30, label: "]" },
+            { keycode: 42, label: "\\" },
+            { keycode: 117, label: "delete" },
+            { keycode: 119, label: "end" },
+            { keycode: 121, label: "pg down" },
+            { keycode: 89, label: "7" },
+            { keycode: 91, label: "8" },
+            { keycode: 92, label: "9" },
+            { keycode: 78, label: "-" },
+            { keycode: 57, label: "caps", width: 65 },
+            { keycode: 0, label: "A" },
+            { keycode: 1, label: "S" },
+            { keycode: 2, label: "D" },
+            { keycode: 3, label: "F" },
+            { keycode: 5, label: "G" },
+            { keycode: 4, label: "H" },
+            { keycode: 38, label: "J" },
+            { keycode: 40, label: "K" },
+            { keycode: 37, label: "L" },
+            { keycode: 41, label: ";" },
+            { keycode: 39, label: "\"" },
+            { keycode: 36, label: "return", width: 65 },
+            { keycode: 86, label: "4" },
+            { keycode: 87, label: "5" },
+            { keycode: 88, label: "6" },
+            { keycode: 69, label: "+" },
+            { keycode: 56, label: "shift", width: 85 },
+            { keycode: 6, label: "Z" },
+            { keycode: 7, label: "X" },
+            { keycode: 8, label: "C" },
+            { keycode: 9, label: "V" },
+            { keycode: 11, label: "B" },
+            { keycode: 45, label: "N" },
+            { keycode: 46, label: "M" },
+            { keycode: 43, label: "," },
+            { keycode: 47, label: "." },
+            { keycode: 44, label: "/" },
+            { keycode: 60, label: "shift", width: 85 },
+            { keycode: 126, label: "up" },
+            { keycode: 83, label: "1" },
+            { keycode: 84, label: "2" },
+            { keycode: 85, label: "3" },
+            { keycode: 76, label: "enter", height: 72 },
+            { keycode: 59, label: "ctrl", width: 55 },
+            { keycode: 58, label: "opt", width: 45 },
+            { keycode: 55, label: "cmd", width: 55 },
+            { keycode: 49, label: "space", width: 234 },
+            { keycode: 54, label: "cmd", width: 55 },
+            { keycode: 61, label: "opt", width: 45 },
+            { keycode: 62, label: "ctrl", width: 55 },
+            { keycode: 123, label: "left" },
+            { keycode: 125, label: "down" },
+            { keycode: 124, label: "right" },
+            { keycode: 82, label: "0", width: 76 },
+            { keycode: 65, label: "." },
+        ];
+
+        let actionIconMap = {
+            "REMAP": "🔄",
+            "SET_LAYER": "📚",
+            "CHORD": "🎹",
+            "INVOKE_COMMAND": "🖥",
+            "SET_MODIFIER": "⌨️"
+        }
+
+        const remapped = [];
+        let draggedKeyData = null;
+        let selectedLayer = null;
+        let layers = [];
+
+        function onDrop() {
+            console.log('dropped');
+        }
+
+        function createKeyElement(key) {
+            const keyDiv = document.createElement("div");
+            keyDiv.classList.add("key");
+            keyDiv.setAttribute("data-keycode", key.keycode);
+            keyDiv.setAttribute("draggable", "true");
+            keyDiv.textContent = key.label;
+            keyDiv.draggable = true;
+            keyDiv.ondragend = function (event) {
+                event.preventDefault();
+                console.log({ event });
+            };
+            if (key.width) {
+                keyDiv.style.width = key.width + "px";
+            }
+
+            if (key.height) {
+                keyDiv.style.height = key.height + "px";
+            }
+
+            return keyDiv;
+        }
+
+        function renderKeyboard() {
+            const keysRulerContainer = document.createElement("div");
+            keysRulerContainer.classList.add("keys_ruler");
+
+            const row = document.createElement("div");
+            row.classList.add("row");
+
+            keys.forEach(key => {
+                const keyElement = createKeyElement(key);
+                row.appendChild(keyElement);
+            });
+
+            keysRulerContainer.appendChild(row);
+            document.body.appendChild(keysRulerContainer);
+        }
+
+        function updateKeys() {
+            document.querySelectorAll('.keyboard .key').forEach(keyElement => {
+                const keycode = keyElement.getAttribute('data-keycode');
+                if (keycode) {
+                    const keyData = keys.find(k => k.keycode == keycode);
+                    const remappedKeyData = remapped.find(k => k.keycode == keycode);
+                    if (remappedKeyData) {
+                        keyElement.textContent = remappedKeyData.label;
+                    } else if (keyData) {
+                        keyElement.textContent = keyData.label;
+                    }
+                }
+            });
+        }
+
+        function setRulerKeys() {
+            document.querySelectorAll('.keys_ruler .key').forEach(keyElement => {
+                const keycode = keyElement.getAttribute('data-keycode');
+                if (keycode) {
+                    const keyData = keys.find(k => k.keycode == keycode);
+                    const remappedKeyData = remapped.find(k => k.keycode == keycode);
+                    if (remappedKeyData) {
+                        keyElement.textContent = remappedKeyData.label;
+                    } else if (keyData) {
+                        keyElement.textContent = keyData.label;
+                    }
+                }
+            });
+        }
+
+        function clearRemaps() {
+            document.querySelectorAll('.keyboard .key').forEach(keyElement => {
+                keyElement.removeAttribute('data-remapped-keycode'); // Remove remap data
+                const keycode = keyElement.getAttribute('data-keycode');
+                const keyData = keys.find(k => k.keycode == keycode);
+
+                keyElement.textContent = ""; // Restore original label
+            });
+            document.getElementById("conf_box").textContent = "";
+            clearSelectedLayer();
+            console.log("Remaps cleared!");
+        }
+
+        function onDragStart(event) {
+            const keycode = event.target.getAttribute('data-keycode');
+            const action = event.target.getAttribute('data-action');
+            const action_value = document.getElementById("action_value").value;
+            let keyLabel = event.target.textContent;
+
+            const action_conf = action_value != null ? {
+                "action": action,
+                "value": action_value
+            } : undefined;
+
+            if (action != null) {
+                keyLabel = event.target.getAttribute('data-action-icon');
+            }
+
+            draggedKeyData = { keycode, label: keyLabel, action: action_conf };
+            event.dataTransfer.setData('text/plain', JSON.stringify(draggedKeyData));
+        }
+
+        function onDragOver(event) {
+            event.preventDefault(); // Allows the drop event
+        }
+
+        function onDrop(event) {
+            event.preventDefault();
+
+            if (!draggedKeyData) return;
+
+            const targetKey = event.target;
+            if (draggedKeyData.keycode != null) {
+                targetKey.setAttribute('data-remapped-keycode', draggedKeyData.keycode);
+            }
+            if (draggedKeyData.action != null) {
+                targetKey.setAttribute('data-remapped-action', JSON.stringify(draggedKeyData.action));
+            }
+            if (draggedKeyData.label != null) {
+
+                targetKey.textContent = draggedKeyData.label;
+            }
+
+            // Clear dragged key data
+            draggedKeyData = null;
+            generateRemapConfig();
+        }
+
+        function setKeyRemap(keyCode, remap, action) {
+            const keyElement = document.querySelector(`.keyboard .key[data-keycode="${keyCode}"]`);
+            if (keyElement) {
+                if (remap != null) {
+                    keyElement.setAttribute('data-remapped-keycode', remap);
+                    const keyData = keys.find(k => k.keycode == remap);
+                    if (keyData) {
+                        keyElement.textContent = keyData.label;
+                    }
+                } else if (action != null) {
+                    keyElement.setAttribute('data-remapped-action', JSON.stringify(action));
+                    keyElement.textContent = actionIconMap[action.type];
+                }
+            }
+        }
+
+        function generateRemapConfig() {
+            const remapConfig = {};
+            conf = document.getElementById("conf_box")
+
+            document.querySelectorAll('.keyboard .key').forEach(keyElement => {
+                const originalKeycode = keyElement.getAttribute('data-keycode');
+                const remappedKeycode = keyElement.getAttribute('data-remapped-keycode');
+                const remappedAction = keyElement.getAttribute('data-remapped-action');
+
+                if (remappedKeycode && remappedKeycode !== originalKeycode) {
+                    remapConfig[originalKeycode] = remappedKeycode;
+                } else if (remappedAction != null && remappedAction != "") {
+                    remapConfig[originalKeycode] = JSON.parse(remappedAction);
+                }
+            });
+
+            conf.textContent = JSON.stringify(remapConfig, null, 2);
+            return remapConfig;
+        }
+
+        function load_layers() {
+            layersContainer = document.querySelector('.layer_selector');
+            fetch("http://localhost:5000/layers")
+                .then(response => response.json())
+                .then(layers => {
+                    layers.forEach(layer => {
+                        const layerElement = document.createElement("button");
+                        layerElement.setAttribute("data-layer-id", layer.id);
+                        layerElement.classList.add("layer");
+                        layerElement.textContent = layer.name;
+
+                        layerElement.onclick = function () {
+                            selectedLayer = layer.id;
+                            fetch(`http://localhost:5000/layers/${layer.id}/mapping`)
+                                .then(response => response.json())
+                                .then(layerData => {
+                                    clearRemaps();
+                                    layers = layerData;
+
+                                    for (const [key, value] of Object.entries(layerData)) {
+                                        action = value?.action;
+                                        actionType = value?.action?.type;
+
+                                        if (action != null) {
+                                            setKeyRemap(key, null, action);
+                                        } else {
+                                            setKeyRemap(key, value, null);
+                                        }
+                                    }
+                                    setKeyRemap()
+                                    generateRemapConfig();
+                                    markSelectedLayer(layer.id);
+                                });
+                        };
+                        layersContainer.appendChild(layerElement);
+                    });
+                });
+        }
+
+        function openTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.getElementById(tabName).classList.add('active');
+            document.querySelector(`.tab-container .tab[onclick="openTab('${tabName}')"]`).classList.add('active');
+        }
+
+        function registerKeyboardDragEvents() {
+            document.querySelectorAll('.keys_ruler .key').forEach(key => {
+                key.addEventListener('dragstart', onDragStart);
+            });
+
+            document.querySelectorAll('.actions_ruler .action_key').forEach(key => {
+                key.addEventListener('dragstart', onDragStart);
+            });
+
+            document.querySelectorAll('.keyboard .key').forEach(key => {
+                key.addEventListener('dragover', onDragOver);
+                key.addEventListener('drop', onDrop);
+            });
+        }
+
+        function sendAddRemap() {
+            remapConfig = {
+                "0": "18"
+            }
+            fetch(`http://localhost:5000/layers/${selectedLayer}/mapping`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(remapConfig)
+            }).then(response => {
+                if (response.ok) {
+                    console.log("Remap added!");
+                } else {
+                    console.error("Failed to add remap!");
+                }
+            });
+        }
+
+        function clearSelectedLayer() {
+            document.querySelectorAll('.layer').forEach(layerElement => {
+                layerElement.classList.remove('selected_layer');
+            });
+            selectedLayer = null;
+        }
+
+        function sendChangeLayer(layerId) {
+            return fetch(`http://localhost:5000/change-layer`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    "layer_id": layerId
+                })
+            }).then(response => {
+                if (response.ok) {
+                    console.log("Changed layer!");
+                } else {
+                    console.error("Failed to Changed layer!");
+                    throw new Error("Failed to Changed layer!");
+                }
+            });
+        }
+
+        function markSelectedLayer(layerId) {
+            sendChangeLayer(layerId).then(() => {
+                clearSelectedLayer();
+                selectedLayer = layerId;
+                document.querySelector(`.layer[data-layer-id="${layerId}"]`).classList.add('selected_layer');
+            });
+
+        }
+
+        function startKeylogger() {
+            fetch(`http://localhost:5000/start`, {
+                method: 'POST',
+
+            }).then(response => {
+                if (response.ok) {
+                    console.log("Keylogger started!");
+                } else {
+                    console.error("Failed to start keylogger!");
+                    throw new Error("Failed to start keylogger!");
+                }
+            });
+        }
+
+        function stopKeylogger() {
+            fetch(`http://localhost:5000/stop`, {
+                method: 'POST',
+
+            }).then(response => {
+                if (response.ok) {
+                    console.log("Keylogger started!");
+                } else {
+                    console.error("Failed to start keylogger!");
+                    throw new Error("Failed to start keylogger!");
+                }
+            });
+        }
+
+        registerKeyboardDragEvents();
+        setRulerKeys();
+        load_layers();
+    </script>
+</body>
+
+</html>

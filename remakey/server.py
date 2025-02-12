@@ -1,5 +1,6 @@
+from contextlib import asynccontextmanager
 from typing import List, Optional, Union
-from fastapi import FastAPI
+from fastapi import FastAPI, Request, Depends
 from pydantic import BaseModel
 import uvicorn
 
@@ -7,9 +8,27 @@ from enums import KeyNames
 from key_logger_commander import KeyLoggerManager
 from remap_layer import ActionsEnum
 from utils import serialize_layer_mapping
+from fastapi.templating import Jinja2Templates
 
-app = FastAPI()
 key_logger_manager = KeyLoggerManager()
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    global key_logger_manager
+    print("Starting Key Logger Manager...")
+    key_logger_manager.start_thread()
+    key_logger_manager.start()
+
+    yield  # This suspends execution until the app shuts down
+
+    print("Stopping Key Logger Manager...")
+    key_logger_manager.stop()
+    key_logger_manager.join_thread()
+
+
+app = FastAPI(lifespan=lifespan)
+templates = Jinja2Templates(directory="templates")
 
 
 class ChangeLayerBody(BaseModel):
@@ -40,16 +59,24 @@ class AddRemapToLayerBody(BaseModel):
     value: str
 
 
+def get_key_logger_manager():
+    return key_logger_manager  # Return the existing instance
+
+
 @app.post("/start")
-async def handle_command():
+async def handle_start_command(
+    manager: KeyLoggerManager = Depends(get_key_logger_manager),
+):
     print("Received start command")
-    key_logger_manager.start()
+    manager.start()
 
 
 @app.post("/stop")
-async def handle_command():
-    print("Received start command")
-    key_logger_manager.stop()
+async def handle_stop_command(
+    manager: KeyLoggerManager = Depends(get_key_logger_manager),
+):
+    print("Received stop command")
+    manager.stop()
 
 
 @app.get("/clear-logs")
@@ -83,7 +110,7 @@ async def get_layer_mapping(layer_id: str):
 
 
 @app.post("/layers/{layer_id}/mapping")
-async def add_remap_to_layerlayer(
+async def add_remap_to_layer(
     layer_id: str, add_remap_to_layer_body: AddRemapToLayerBody
 ):
     key_logger_manager.add_remap_to_layer(
@@ -97,11 +124,14 @@ async def change_layer(change_layer_body: ChangeLayerBody):
     return "success"
 
 
+@app.get("/editor")
+async def get_editor(request: Request):
+    return templates.TemplateResponse("keyboard.html", {"request": request})
+
+
 def main():
     print("Remakey server is running...")
-    key_logger_manager.start_thread()
-    uvicorn.run(app, host="0.0.0.0", port=5000)
-    key_logger_manager.join_thread()
+    uvicorn.run("server:app", host="0.0.0.0", port=5000)
 
 
 if __name__ == "__main__":
