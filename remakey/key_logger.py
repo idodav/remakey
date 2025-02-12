@@ -247,7 +247,10 @@ class KeyLogger:
         now = time.time()
         key_events = self.config.get_key_events(keycode)
 
-        if EventsEnum.KEY_HOLD in key_events:
+        if (
+            EventsEnum.KEY_HOLD in key_events
+            or EventsEnum.KEY_HOLD_RELEASE in key_events
+        ):
             # Track key press start time
             if keycode not in self.key_press_times:
                 self.key_press_times[keycode] = {"timestamp": now, "triggered": False}
@@ -278,8 +281,8 @@ class KeyLogger:
             if press_duration >= self.hold_threshold and triggered:
                 del self.key_press_times[keycode]  # Remove after processing
 
-                self.register_event(EventsEnum.KEY_HOLD_RELEASE, [], keycode)
-                return self.handle_event(EventsEnum.KEY_HOLD_RELEASE, keycode)
+                self.register_event(EventsEnum.KEY_HOLD_RELEASE.value, [], keycode)
+                return self.handle_event(EventsEnum.KEY_HOLD_RELEASE.value, keycode)
             elif self.key_press_times[keycode].get("released"):
                 del self.key_press_times[keycode]  # Remove after processing
             else:
