@@ -1,8 +1,8 @@
 from enum import Enum
 from typing import TypedDict
-from enums import KEY_NAMES, EventsEnum, KeyNames
 from uuid import uuid4
 
+from remakey.enums import KEY_NAMES, EventsEnum, KeyNames
 
 class ActionsEnum(str, Enum):
     REMAP = 0

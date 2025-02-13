@@ -1,4 +1,4 @@
-from enums import KeyNames
+from remakey.enums import KeyNames
 
 
 KEYBOARD_LAYOUT_MAGIC_KEYBOARD = [

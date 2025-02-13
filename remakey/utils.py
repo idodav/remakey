@@ -1,6 +1,3 @@
-from enum import Enum
-
-
 def serialize_layer_mapping(mapping):
     """Convert LayerMapping dictionary to a string with enum names instead of values."""
 

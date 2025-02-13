@@ -1,17 +1,18 @@
-from custom_layers import custom_config
+import time
+import subprocess
 import Quartz
 import threading
 import queue
-from enums import (
+
+from remakey.default_config import custom_config
+from remakey.enums import (
     MODIFIER_FLAGS,
     MODIFIER_KEY_TO_BITMASK,
     MODIFIERS,
     EventsEnum,
     KeyNames,
 )
-import time
-from remap_layer import ActionsEnum, Config, KeyActionConfiguration
-import subprocess
+from remakey.remap_layer import ActionsEnum, Config, KeyActionConfiguration
 
 
 class KeyLogger:

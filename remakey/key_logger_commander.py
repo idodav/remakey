@@ -1,9 +1,10 @@
 import asyncio
-from enums import KeyNames
-from key_logger import KeyLogger
-from custom_layers import custom_config
 import threading
 import json
+
+from remakey.enums import KeyNames
+from remakey.key_logger import KeyLogger
+from remakey.default_config import custom_config
 
 
 class KeyLoggerManager:

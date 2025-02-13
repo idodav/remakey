@@ -4,12 +4,12 @@ from fastapi import FastAPI, Request, Depends
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 import uvicorn
-
-from enums import KeyNames
-from key_logger_commander import KeyLoggerManager
-from remap_layer import ActionsEnum
-from utils import serialize_layer_mapping
 from fastapi.templating import Jinja2Templates
+
+from remakey.enums import KeyNames
+from remakey.key_logger_commander import KeyLoggerManager
+from remakey.remap_layer import ActionsEnum
+from remakey.utils import serialize_layer_mapping
 
 key_logger_manager = KeyLoggerManager()
 
@@ -29,7 +29,7 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(lifespan=lifespan)
-templates = Jinja2Templates(directory="templates")
+templates = Jinja2Templates(directory="remakey/templates")
 
 
 class ChangeLayerBody(BaseModel):
@@ -169,7 +169,7 @@ async def get_editor(request: Request):
 
 def main():
     print("Remakey server is running...")
-    uvicorn.run("remakey:app", host="0.0.0.0", port=5000)
+    uvicorn.run("remakey.remakey:app", host="0.0.0.0", port=5000)
 
 
 if __name__ == "__main__":

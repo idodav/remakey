@@ -2,15 +2,21 @@
 name = "remakey"
 version = "0.1.0"
 description = "Macos Keyboard remapper"
-authors = ["Your Name <you@example.com>"]
+authors = ["Ido David <you@example.com>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
 python = "^3.12"
 pyobjc-framework-quartz = "^11.0"
 pyqt6 = "^6.8.0"
+fastapi = "^0.115.8"
+uvicorn = "^0.34.0"
+jinja2 = "^3.1.5"
 
 
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.scripts]
+remakey-server = "remakey.remakey:main"
