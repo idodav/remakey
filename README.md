@@ -36,7 +36,8 @@
 2. Configure your key remapping rules in the `config.json` file.
 3. Reload the configuration using:
    ```sh
-   python remakey.py
+   poetry install
+   poetry run remakey-server
    ```
 4. Enjoy a fully customized keyboard experience!
 
