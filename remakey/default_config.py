@@ -1,8 +1,15 @@
-from remakey.enums import EventsEnum, KeyNames
+from remakey.enums import EventsEnum, KeyNames, ModifierFlagsEnum
 from remakey.remap_layer import ActionsEnum, Config, LayerMapping, Layer
 
 global_mapping = {
     KeyNames.KEYPAD_0: {
+        "action": {
+            "type": ActionsEnum.INVOKE_COMMAND,
+            "value": "~/Desktop/remakey/remakey/templates/start_electron.sh",
+            "event": EventsEnum.KEY_DOWN,
+        }
+    },
+    KeyNames.SECTION: {
         "action": {
             "type": ActionsEnum.INVOKE_COMMAND,
             "value": "~/Desktop/remakey/remakey/templates/start_electron.sh",
@@ -30,15 +37,8 @@ global_mapping = {
             "event": EventsEnum.KEY_DOWN,
         },
     },
-    KeyNames.S: {
-        "action": {
-            "type": ActionsEnum.REMAP,
-            "value": KeyNames.A,
-            "modifiers": ["command"],
-            "event": EventsEnum.KEY_HOLD,
-        }
-    },
 }
+
 
 LAYER_0 = Layer(
     LayerMapping(mapping={**global_mapping}),
@@ -49,45 +49,40 @@ LAYER_1 = Layer(
     LayerMapping(
         mapping={
             **global_mapping,
-            KeyNames.J: KeyNames.DOWN_ARROW,
-            KeyNames.K: KeyNames.UP_ARROW,
-            KeyNames.L: KeyNames.RIGHT_ARROW,
-            KeyNames.H: KeyNames.LEFT_ARROW,
+            KeyNames.X: KeyNames.ONE,
+            KeyNames.C: KeyNames.TWO,
+            KeyNames.V: KeyNames.THREE,
+            KeyNames.S: KeyNames.FOUR,
+            KeyNames.D: KeyNames.FIVE,
+            KeyNames.F: KeyNames.SIX,
+            KeyNames.W: KeyNames.SEVEN,
+            KeyNames.E: KeyNames.EIGHT,
+            KeyNames.R: KeyNames.NINE,
+            KeyNames.B: KeyNames.BACKSLASH,
+            KeyNames.G: KeyNames.EQUAL,
+            KeyNames.T: KeyNames.RIGHT_BRACKET,
+            KeyNames.Q: KeyNames.LEFT_BRACKET,
         }
     ),
-    name="Navigation layer",
-    id="5a62a6a4-06d6-4f4d-99b3-afa91d311123",
+    name="Numbers",
+    id="5a62a6a4-06d6-4f4d-99b3-afa91d311111",
 )
 LAYER_2 = Layer(
     LayerMapping(
         mapping={
             **global_mapping,
-            KeyNames.A: KeyNames.ONE,
-            KeyNames.S: KeyNames.TWO,
-            KeyNames.D: KeyNames.THREE,
-            KeyNames.F: KeyNames.FOUR,
-            KeyNames.G: KeyNames.FIVE,
-            KeyNames.H: KeyNames.SIX,
-            KeyNames.J: KeyNames.SEVEN,
-            KeyNames.K: KeyNames.EIGHT,
-            KeyNames.L: KeyNames.NINE,
-            KeyNames.SEMICOLON: KeyNames.ZERO,
-            KeyNames.Q: KeyNames.F1,
-            KeyNames.W: KeyNames.F2,
-            KeyNames.E: KeyNames.F3,
-            KeyNames.R: KeyNames.F4,
-            KeyNames.T: KeyNames.F5,
-            KeyNames.Y: KeyNames.F6,
-            KeyNames.U: KeyNames.F7,
-            KeyNames.I: KeyNames.F8,
-            KeyNames.O: KeyNames.F9,
-            KeyNames.P: KeyNames.F10,
-            KeyNames.LEFT_BRACKET: KeyNames.F11,
-            KeyNames.RIGHT_BRACKET: KeyNames.F12,
+            KeyNames.J: {
+                "action": {
+                    "type": ActionsEnum.REMAP,
+                    "value": KeyNames.NINE,
+                    "event": EventsEnum.KEY_DOWN,
+                    "modifiers": {ModifierFlagsEnum.SHIFT},
+                }
+            },
         }
     ),
-    name="Number layer",
-    id="5a62a6a4-06d6-4f4d-99b3-afa91d311111",
+    name="Symbols",
+    id="5a62a6a4-06d6-4f4d-99b3-afa91d3111114",
 )
 
 custom_config = Config(

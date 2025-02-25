@@ -1,7 +1,6 @@
-import { Action, ActionPanel, Detail, Icon, List, open, showToast, Toast } from "@raycast/api";
+import { Action, ActionPanel, Icon, List, open, showToast, Toast } from "@raycast/api";
 import axios from "axios";
 import { useEffect, useState } from "react";
-import { WebView } from "@raycast/api";
 
 const API_URL = "http://localhost:5000"; // Your FastAPI server
 

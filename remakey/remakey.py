@@ -25,7 +25,6 @@ async def lifespan(app: FastAPI):
 
     print("Stopping Key Logger Manager...")
     key_logger_manager.stop()
-    key_logger_manager.join_thread()
 
 
 app = FastAPI(lifespan=lifespan)
@@ -169,7 +168,7 @@ async def get_editor(request: Request):
 
 def main():
     print("Remakey server is running...")
-    uvicorn.run("remakey.remakey:app", host="0.0.0.0", port=5000)
+    uvicorn.run("remakey.remakey:app", reload=True, host="0.0.0.0", port=5000)
 
 
 if __name__ == "__main__":
