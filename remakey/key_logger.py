@@ -153,7 +153,7 @@ class KeyLogger:
             self.rotate_layer()
             return True  # Suppress original key
         elif self.config.check_key_in_mapping(keycode):
-            action: KeyActionConfiguration = self.config.get_key_action(
+            action: KeyActionConfiguration | None = self.config.get_key_action(
                 keycode, event_type
             )
 
