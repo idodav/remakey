@@ -1,8 +1,10 @@
 from enum import Enum
-from typing import TypedDict
+import json
+from typing import Optional, TypedDict
 from uuid import uuid4
 
-from remakey.enums import KEY_NAMES, EventsEnum, KeyNames
+from remakey.enums import KEY_NAMES, EventsEnum, KeyNames, ModifierFlagsEnum
+
 
 class ActionsEnum(str, Enum):
     REMAP = 0
@@ -20,8 +22,9 @@ class ActionsEnum(str, Enum):
 
 class KeyActionConfiguration(TypedDict):
     type: ActionsEnum | None
-    value: int | KeyNames | list[KeyNames] | None
-    event: EventsEnum = EventsEnum.KEY_DOWN
+    value: str | int | KeyNames | list[KeyNames] | None
+    event: EventsEnum | None
+    modifiers: Optional[list[str | ModifierFlagsEnum]]
 
 
 class KeyConfiguration(TypedDict):
@@ -31,17 +34,80 @@ class KeyConfiguration(TypedDict):
 class LayerMapping(TypedDict):
     mapping: dict[
         KeyNames,
-        KeyConfiguration,
-        int | KeyNames | list[KeyNames] | list[KeyConfiguration] | None,
+        KeyConfiguration
+        | int
+        | KeyNames
+        | list[KeyNames]
+        | list[KeyConfiguration]
+        | None,
     ]
 
+
+class LayerMappingSerializer:
+    @classmethod
+    def to_json(cls, mapping):
+        def serialize(obj):
+            if isinstance(obj, Enum):
+                return obj.name
+            if isinstance(obj, KeyConfiguration):
+                return {"action": serialize(obj.action)}
+            if isinstance(obj, KeyActionConfiguration):
+                return {
+                    "type": obj.type.name,
+                    "value": obj.value,
+                    "event": obj.event.name,
+                    "modifiers": (
+                        [mod.name for mod in obj.modifiers] if obj.modifiers else None
+                    ),
+                }
+            return obj
+
+        return json.dumps(mapping, default=serialize, indent=4)
+
+    @classmethod
+    def from_json(cls, json_str: str) -> LayerMapping:
+        def deserialize(obj):
+            if isinstance(obj, str):
+                try:
+                    return KeyNames(obj)
+                except KeyError:
+                    try:
+                        return ActionsEnum(obj)
+                    except KeyError:
+                        try:
+                            return EventsEnum(obj)
+                        except KeyError:
+                            try:
+                                return ModifierFlagsEnum(obj)
+                            except KeyError:
+                                return obj
+            if isinstance(obj, dict):
+                if "action" in obj:
+                    return KeyConfiguration(
+                        action=KeyActionConfiguration(
+                            type=ActionsEnum(obj["action"]["type"]),
+                            value=obj["action"]["value"],
+                            event=EventsEnum(obj["action"]["event"]),
+                            modifiers=(
+                                [
+                                    ModifierFlagsEnum(mod)
+                                    for mod in obj["action"]["modifiers"]
+                                ]
+                                if obj["action"]["modifiers"]
+                                else None
+                            ),
+                        )
+                    )
+            return obj
+
+        return json.loads(json_str, object_hook=deserialize)
 
 class Layer:
     def __init__(
         self,
         mapping: LayerMapping | None,
-        name: str = None,
-        id: str = None,
+        name: str | None = None,
+        id: str | None = None,
         suppress_unmapped=False,
     ):
         self.id = id if id is not None else uuid4()
@@ -103,8 +169,8 @@ class Config:
         change_layer_key: KeyNames,
         is_silent=True,
     ):
-        self.is_silent = is_silent
-        self.current_layer = None
+        self.is_silent: bool = is_silent
+        self.current_layer: int | None = None
         self.layers: list[Layer] = []
         self.change_layer_key = KeyNames.BACKSLASH
 
