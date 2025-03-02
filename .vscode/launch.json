@@ -15,8 +15,14 @@
             "name": "server",
             "type": "debugpy",
             "request": "launch",
-            "cwd": "${workspaceFolder}/remakey",
-            "program": "remakey.py",
+            "cwd": "${workspaceFolder}",
+            "module": "poetry",
+            "args": [
+                "run",
+                "python",
+                "-m",
+                "remakey.remakey"
+            ],
             "console": "integratedTerminal"
         },
         {
