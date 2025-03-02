@@ -81,10 +81,14 @@ class KeyLoggerManager:
 
     def get_layer_mapping(self, layer_id: str):
         layer = self.key_logger.config.get_layer(layer_id)
+        if layer is None:
+            return None
         mapping = layer.mapping.get("mapping")
         return mapping
 
     def get_current_layer_mapping(self):
+        if self.key_logger.config.current_layer is None:
+            return None
         layer_id = self.key_logger.config.layers[
             self.key_logger.config.current_layer
         ].id
@@ -96,7 +100,7 @@ class KeyLoggerManager:
         ].id
         return self.get_layer(layer_id)
 
-    def set_current_layer_by_id(self, layer_id: int):
+    def set_current_layer_by_id(self, layer_id: str):
         self.key_logger.set_layer_by_id(layer_id)
 
     def add_remap_to_layer(self, layer_id: int, key: KeyNames, value: KeyNames):
