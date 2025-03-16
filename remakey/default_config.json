@@ -1,0 +1,42 @@
+{
+    "82": {
+        "action": {
+            "type": "9",
+            "value": "~/Desktop/remakey/remakey/templates/start_electron.sh",
+            "event": "10",
+            "modifiers": null
+        }
+    },
+    "10": {
+        "action": {
+            "type": "9",
+            "value": "~/Desktop/remakey/remakey/templates/start_electron.sh",
+            "event": "10",
+            "modifiers": null
+        }
+    },
+    "54": {
+        "action": {
+            "type": "1",
+            "value": 0,
+            "event": "10",
+            "modifiers": null
+        }
+    },
+    "61": {
+        "action": {
+            "type": "1",
+            "value": 1,
+            "event": "10",
+            "modifiers": null
+        }
+    },
+    "62": {
+        "action": {
+            "type": "1",
+            "value": 2,
+            "event": "10",
+            "modifiers": null
+        }
+    }
+}

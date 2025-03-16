@@ -103,5 +103,5 @@ class KeyLoggerManager:
     def set_current_layer_by_id(self, layer_id: str):
         self.key_logger.set_layer_by_id(layer_id)
 
-    def add_remap_to_layer(self, layer_id: int, key: KeyNames, value: KeyNames):
+    def add_remap_to_layer(self, layer_id: str, key: KeyNames, value: KeyNames):
         self.key_logger.config.add_remap_to_layer(layer_id, key, value)

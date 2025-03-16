@@ -18,6 +18,8 @@ class ActionsEnum(str, Enum):
     INC_MOUSE_POSITION_Y = 8
     INVOKE_COMMAND = 9
     SET_MODIFIER = 10
+    LAYER_UP = 11
+    LAYER_DOWN = 12
 
 
 class KeyActionConfiguration(TypedDict):
@@ -31,16 +33,20 @@ class KeyConfiguration(TypedDict):
     action: KeyActionConfiguration | None
 
 
+MappingType = dict[
+    KeyNames,
+    KeyConfiguration
+    | int
+    | KeyNames
+    | list[KeyNames]
+    | list[KeyConfiguration]
+    | dict
+    | None,
+]
+
+
 class LayerMapping(TypedDict):
-    mapping: dict[
-        KeyNames,
-        KeyConfiguration
-        | int
-        | KeyNames
-        | list[KeyNames]
-        | list[KeyConfiguration]
-        | None,
-    ]
+    mapping: MappingType
 
 
 class LayerMappingSerializer:
@@ -101,6 +107,7 @@ class LayerMappingSerializer:
             return obj
 
         return json.loads(json_str, object_hook=deserialize)
+
 
 class Layer:
     def __init__(
@@ -198,9 +205,11 @@ class Config:
             if layer.id == layer_id:
                 self.set_current_layer(i)
 
-    def rotate_current_layers(self):
+    def rotate_current_layers(self, direction=1):
         if self.current_layer is not None:
-            self.current_layer = (self.current_layer + 1) % len(self.layers)
+            self.current_layer = (self.current_layer + (1 * direction)) % len(
+                self.layers
+            )
 
     def check_key_in_mapping(self, keycode: KeyNames):
         if self.current_layer is not None:

@@ -61,8 +61,8 @@ class KeyLogger:
         """Get active modifier keys as a list."""
         return [name for bitmask, name in MODIFIERS.items() if flags & bitmask]
 
-    def rotate_layer(self):
-        self.config.rotate_current_layers()
+    def rotate_layer(self, direction=1):
+        self.config.rotate_current_layers(direction)
         current_layer_id = self.config.layers[self.config.current_layer].id
         self.log(f"🔄 Switched to Layer {self.config.current_layer}")
         self.change_layer_queue.put(current_layer_id)
@@ -207,6 +207,10 @@ class KeyLogger:
                 elif action_type == ActionsEnum.SET_LAYER:
                     self.set_layer(action_value)
                     return True
+                elif action_type == ActionsEnum.LAYER_UP:
+                    self.rotate_layer(1)
+                elif action_type == ActionsEnum.LAYER_DOWN:
+                    self.rotate_layer(-1)
                 elif action_type == ActionsEnum.SET_MOUSE_POSITION_X:
                     self.set_mouse_x(action_value)
                     return True

@@ -138,6 +138,22 @@
             align-items: center;
         }
 
+        .layer_preview {
+            background: white;
+            text-align: center;
+            border-radius: 5px;
+            box-shadow: 0 2px 2px rgba(0, 0, 0, 0.2);
+            font-size: 14px;
+            cursor: grab;
+            user-select: none;
+            height: 32px;
+            min-width: 36px;
+            min-height: 32px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
         .key-down {
             background: #3f4e5e;
             color: white;
@@ -368,7 +384,8 @@
                     <div class="key" data-keycode="39" draggable="true"></div>
                     <div class="key" data-keycode="36" style="width:65px;" draggable="true"></div>
                 </div>
-                <div class="row2" style="margin-left: 123px">
+                <div style="width: 115px; margin-right:5px;" class="layer_preview"></div>
+                <div class="row2">
                     <div class="key" data-keycode="86" draggable="true"></div>
                     <div class="key" data-keycode="87" draggable="true"></div>
                     <div class="key" data-keycode="88" draggable="true"></div>
@@ -636,6 +653,9 @@
     </div>
 
     <script>
+        let currentLayerId;
+        let all_layers = [];
+
         const keys = [
             { keycode: 53, label: "Esc", width: 55 },
             { keycode: 122, label: "F1" },
@@ -750,6 +770,8 @@
         let actionIconMap = {
             "REMAP": "🔄",
             "SET_LAYER": "📚",
+            "LAYER_UP": "📚",
+            "LAYER_DOWN": "📚",
             "CHORD": "🎹",
             "INVOKE_COMMAND": "🖥",
             "SET_MODIFIER": "⌨️"
@@ -884,6 +906,8 @@
 
                 targetKey.textContent = draggedKeyData.label;
             }
+            original_keycode = targetKey.getAttribute("data-remapped-keycode");
+            sendAddRemap(original_keycode, draggedKeyData.keycode);
 
             // Clear dragged key data
             draggedKeyData = null;
@@ -931,6 +955,7 @@
             fetch("http://localhost:5000/layers")
                 .then(response => response.json())
                 .then(layers => {
+                    all_layers = layers;
                     layers.forEach(layer => {
                         const layerElement = document.createElement("button");
                         layerElement.setAttribute("data-layer-id", layer.id);
@@ -962,7 +987,6 @@
                 .then(response => response.json())
                 .then(layerData => {
                     clearRemaps();
-                    layers = layerData;
 
                     for (const [key, value] of Object.entries(layerData)) {
                         action = value?.action;
@@ -996,11 +1020,13 @@
             });
         }
 
-        function sendAddRemap() {
+        function sendAddRemap(original_key, new_key) {
             remapConfig = {
-                "0": "18"
-            }
-            fetch(`http://localhost:5000/layers/${selectedLayer}/mapping`, {
+
+                [original_key]: new_key
+            };
+
+            fetch(`http://localhost:5000/layers/${currentLayerId}/mapping`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -1079,6 +1105,7 @@
             fetch(`http://localhost:5000/current-layer-id`)
                 .then(response => response.json())
                 .then(layerId => {
+                    currentLayerId = layerId;
                     fetchLayerDataAndShow(layerId);
                 });
         }
@@ -1090,6 +1117,10 @@
         function paintKeyUp(keycode) {
             key = document.querySelector(`.keyboard .key[data-keycode="${keycode}"]`);
             key.classList.remove("key-down");
+        }
+        function showLayerPreviewName(layerId) {
+            layer_preview_container = document.querySelector('.layer_preview');
+            layer_preview_container.innerHTML = all_layers.find(layer => layer.id == layerId).name;
         }
 
         registerKeyboardDragEvents();
@@ -1106,6 +1137,7 @@
             const layerId = event.data;
             markSelectedLayer(layerId);
             fetchLayerDataAndShow(layerId);
+            showLayerPreviewName(layerId);
         });
         eventSource.addEventListener("KEY_DOWN", function (event) {
             console.log("Layer change event", event.data);

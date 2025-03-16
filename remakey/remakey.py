@@ -1,7 +1,9 @@
 from contextlib import asynccontextmanager
+import json
 from typing import List, Optional, Union
 from fastapi import FastAPI, Request, Depends
-from fastapi.responses import StreamingResponse
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import JSONResponse, StreamingResponse
 from pydantic import BaseModel
 import uvicorn
 from fastapi.templating import Jinja2Templates
@@ -56,7 +58,7 @@ class LayerMapping(BaseModel):
 class AddRemapToLayerBody(BaseModel):
     layer_id: str
     key: KeyNames
-    value: str
+    value: KeyNames
 
 
 def get_key_logger_manager():
@@ -141,7 +143,7 @@ async def get_current_layer_mapping(layer_id: str):
 
 
 @app.get("/current-layer-id")
-async def get_current_layer_mapping():
+async def get_current_layer_id():
     current_layer_id = key_logger_manager.get_current_layer().id
     return current_layer_id
 
@@ -151,7 +153,9 @@ async def add_remap_to_layer(
     layer_id: str, add_remap_to_layer_body: AddRemapToLayerBody
 ):
     key_logger_manager.add_remap_to_layer(
-        layer_id, add_remap_to_layer_body.key, add_remap_to_layer_body.value
+        layer_id,
+        KeyNames(add_remap_to_layer_body.key),
+        KeyNames(add_remap_to_layer_body.value),
     )
 
 
@@ -164,6 +168,18 @@ async def change_layer(change_layer_body: ChangeLayerBody):
 @app.get("/editor")
 async def get_editor(request: Request):
     return templates.TemplateResponse("keyboard.html", {"request": request})
+
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    print(
+        f"Pydantic Validation Error:\n {
+        json.dumps(exc.errors())}"
+    )
+    return JSONResponse(
+        status_code=422,
+        content={"detail": exc.errors()},
+    )
 
 
 def main():

@@ -1,39 +1,39 @@
 from remakey.enums import EventsEnum, KeyNames, ModifierFlagsEnum
-from remakey.remap_layer import ActionsEnum, Config, LayerMapping, Layer
+from remakey.remap_layer import ActionsEnum, Config, LayerMapping, Layer, MappingType
 
-global_mapping = {
-    KeyNames.KEYPAD_0: {
+global_mapping: MappingType = {
+    KeyNames.RIGHT_SHIFT: {
         "action": {
             "type": ActionsEnum.INVOKE_COMMAND,
             "value": "~/Desktop/remakey/remakey/templates/start_electron.sh",
             "event": EventsEnum.KEY_DOWN,
         }
     },
-    KeyNames.SECTION: {
+    KeyNames.END: {
         "action": {
             "type": ActionsEnum.INVOKE_COMMAND,
             "value": "~/Desktop/remakey/remakey/templates/start_electron.sh",
             "event": EventsEnum.KEY_DOWN,
         }
     },
-    KeyNames.RIGHT_COMMAND: {
+    KeyNames.PAGE_DOWN: {
         "action": {
-            "type": ActionsEnum.SET_LAYER,
-            "value": 0,
-            "event": EventsEnum.KEY_DOWN,
-        },
-    },
-    KeyNames.RIGHT_OPTION: {
-        "action": {
-            "type": ActionsEnum.SET_LAYER,
+            "type": ActionsEnum.LAYER_DOWN,
             "value": 1,
             "event": EventsEnum.KEY_DOWN,
         },
     },
-    KeyNames.RIGHT_CONTROL: {
+    KeyNames.PAGE_UP: {
+        "action": {
+            "type": ActionsEnum.LAYER_UP,
+            "value": 1,
+            "event": EventsEnum.KEY_DOWN,
+        },
+    },
+    KeyNames.HOME: {
         "action": {
             "type": ActionsEnum.SET_LAYER,
-            "value": 2,
+            "value": 0,
             "event": EventsEnum.KEY_DOWN,
         },
     },
